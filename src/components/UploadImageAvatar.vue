@@ -1,10 +1,6 @@
 <template>
   <div class="upload-image-avatar-container">
-    <div
-      v-if="imagePath"
-      class="upload-image-avatar-image"
-      :style="{ backgroundImage: 'url(' + imagePath + ')' }"
-    />
+    <div v-if="imagePath" class="upload-image-avatar-image" :style="{ backgroundImage: 'url(' + imagePath + ')' }" />
     <span class="upload-image-avatar-mask">编辑</span>
     <input type="file" class="upload-image-avatar-file" @change="changeEvent" />
     <div v-show="loading" class="el-loading-mask">
@@ -87,9 +83,7 @@ export default {
       const suffix = fileName.split('.').pop();
       const imageRegex = /(png|jpg|jpeg)/;
       if (file.size > size || !imageRegex.test(suffix)) {
-        this.$message.error(
-          `请上传不大于 ${this.uploadLimit}MB 且格式为png、jpg、jpeg的图片`
-        );
+        this.$message.error(`请上传不大于 ${this.uploadLimit}MB 且格式为png、jpg、jpeg的图片`);
         return false;
       }
       return true;

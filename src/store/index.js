@@ -15,6 +15,9 @@ export default new Vuex.Store({
       introduction: null,
       avatar_url: null,
       unionid: null
+    },
+    baseUrl: {
+      url1: ''
     }
   },
   mutations: {

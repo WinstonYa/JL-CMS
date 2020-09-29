@@ -1,12 +1,13 @@
 import Vue from 'vue';
 import VueRouter from 'vue-router';
 import routes from './routes.js';
-import NProgress from 'nprogress';
-import 'nprogress/nprogress.css';
-import DataStore from '@/globals/storage/index';
-import userService from '@/globals/service/user.js';
-import Store from '@/store/index';
 Vue.use(VueRouter);
+
+const originalPush = VueRouter.prototype.push;
+
+VueRouter.prototype.push = function push(location) {
+  return originalPush.call(this, location).catch(err => err);
+};
 
 const router = new VueRouter({
   mode: 'history',
@@ -16,28 +17,19 @@ const router = new VueRouter({
 
 router.firstInit = false;
 
-router.beforeEach(async (to, from, next) => {
-  NProgress.start();
-  if (to.meta.title) document.title = to.meta.title;
-  const TOKEN = DataStore.getToken();
-  if (TOKEN && !router.firstInit) {
-    router.firstInit = true;
-    try {
-      const { userInfo } = await userService.userInfo();
-      // 防止线上和本地的 jwt 解密的 Key 一样导致获取用户异常
-      if (!userInfo) {
-        DataStore.removeToken();
-        window.location.reload();
-      }
-      Store.commit('USERINFO', userInfo || {});
-    } catch {
-      next();
-    }
-  }
-  next();
-});
-// eslint-disable-next-line
-router.afterEach((to, from) => {
-  NProgress.done();
-});
+//挂载路由导航守卫
+// router.beforeEach((to, from, next) => {
+//   // to 将要访问的路径
+//   // from 代表从哪个路径跳转而来
+//   //next 是一个函数 表示放行
+//   //    next()  放行  next('/login) 强制跳转
+//   if (to.path === '/login') return next();
+//   const tokenStr = window.sessionStorage.getItem('token');
+//   if (!tokenStr) {
+//     next('/login')
+//     return;
+//   }
+//   next();
+// });
+
 export default router;
