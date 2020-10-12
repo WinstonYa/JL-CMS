@@ -89,10 +89,6 @@ export default [
         component: () => import('@/views/InformationSystem/BusinessDirectory.vue')
       },
       {
-        path: '/supervision-admin',
-        component: () => import('@/views/InformationSystem/SupervisionAdmin.vue')
-      },
-      {
         path: '/complaint-advice',
         component: () => import('@/views/InformationSystem/ComplaintAdvice.vue')
       }

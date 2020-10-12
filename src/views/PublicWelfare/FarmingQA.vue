@@ -10,19 +10,32 @@
     <el-card>
       <!-- 添加区域 -->
       <div>
-        <el-select
-          v-model="listQuery.status"
-          placeholder="审核状态"
+        <el-input
+          v-model="listQuery.title"
           size="small"
+          style="width: 120px;margin-left: 20px"
           clearable
-          class="filter-item"
-          style="width: 130px"
-          @change="handleFilter"
-        >
-          <el-option v-for="item in stateTypeOptions" :key="item.key" :label="item.display_name" :value="item.key" />
-        </el-select>
+          @input="handleFilter"
+          placeholder="标题"
+        ></el-input>
+        <el-input
+          v-model="listQuery.userName"
+          size="small"
+          style="width: 120px;margin-left: 20px"
+          clearable
+          @input="handleFilter"
+          placeholder="留言人"
+        ></el-input>
+        <el-input
+          v-model="listQuery.expertName"
+          size="small"
+          style="width: 120px;margin-left: 20px"
+          clearable
+          @input="handleFilter"
+          placeholder="专家"
+        ></el-input>
         <el-select
-          v-model="listQuery.isReply"
+          v-model="listQuery.state"
           placeholder="回复状态"
           clearable
           size="small"
@@ -60,14 +73,14 @@
             {{ (listQuery.page - 1) * listQuery.limit + scope.$index + 1 }}
           </template>
         </el-table-column>
-        <el-table-column align="center" label="标题">
+        <el-table-column align="center" label="标题" width="auto">
           <template slot-scope="scope">
-            <el-link type="primary" :underline="false" @click="replyRow(scope.row)">{{ scope.row.title }}</el-link>
+            <el-link type="primary" :underline="false" @click="replyRow(scope.row)">{{ scope.row.title }} </el-link>
           </template>
         </el-table-column>
         <el-table-column align="center" label="留言内容">
           <template slot-scope="scope">
-            <el-popover placement="top-start" title="留言内容" width="250" trigger="hover">
+            <el-popover placement="top-start" title="留言内容" width="auto" trigger="hover">
               <div>{{ scope.row.content }}</div>
               <span
                 slot="reference"
@@ -82,53 +95,53 @@
         </el-table-column>
         <el-table-column align="center" label="留言人" width="120">
           <template slot-scope="scope">
-            {{ scope.row.commenter }}
-          </template>
-        </el-table-column>
-
-        <el-table-column align="center" label="联系方式" width="120">
-          <template slot-scope="scope">
-            {{ scope.row.commenterPhone }}
+            {{ scope.row.userName }}
           </template>
         </el-table-column>
 
         <el-table-column align="center" label="留言时间" width="160">
           <template slot-scope="scope">
-            {{ scope.row.messageTime }}
+            {{ scope.row.time }}
+          </template>
+        </el-table-column>
+        <el-table-column align="center" label="回复专家" width="120">
+          <template slot-scope="scope">
+            {{ scope.row.expertName }}
           </template>
         </el-table-column>
         <el-table-column align="center" label="回复状态" width="120">
           <template slot-scope="scope">
-            <span v-if="scope.row.isReply === 0" style="color: #F78989">未回复</span>
+            <span v-if="scope.row.state === '0'" style="color: #F78989">未回复</span>
             <span v-else style="color: #67C23A">已回复</span>
           </template>
         </el-table-column>
-        <el-table-column align="center" label="审核状态" width="120">
+        <el-table-column align="center" label="回复内容" width="120">
           <template slot-scope="scope">
-            <el-button
-              v-if="scope.row.status !== '待审核'"
-              type="success"
-              size="mini"
-              style="width: 80px"
-              @click="handleModifyStatus(scope.row, '待审核')"
-            >
-              审核通过
-            </el-button>
-            <el-button
-              v-if="scope.row.status !== '审核通过'"
-              type="danger"
-              size="mini"
-              style="width: 80px"
-              @click="handleModifyStatus(scope.row, '审核通过')"
-            >
-              待审核
-            </el-button>
+            <el-popover placement="top-start" title="回复内容" width="250" trigger="hover">
+              <div>{{ scope.row.replyContent }}</div>
+              <span
+                slot="reference"
+                v-if="scope.row.hasOwnProperty('replyContent') && JSON.stringify(scope.row.content).length > 15"
+                >{{ scope.row.replyContent.substr(0, 15) }}...
+              </span>
+              <span v-else slot="reference">
+                {{ scope.row.replyContent }}
+              </span>
+            </el-popover>
           </template>
         </el-table-column>
+        <el-table-column align="center" label="回复时间" width="160">
+          <template slot-scope="scope">
+            {{ scope.row.replyTime }}
+          </template>
+        </el-table-column>
+
         <el-table-column align="center" label="操作" width="200">
           <template slot-scope="scope">
-            <el-button type="info" size="mini" icon="el-icon-edit" @click="replyRow(scope.row)">回复</el-button>
-            <el-button type="danger" size="mini" icon="el-icon-delete" @click="deleteRow(scope.row)">删除</el-button>
+            <el-button type="info" size="mini" icon="el-icon-edit" @click="replyRow(scope.row)">回复 </el-button>
+            <el-button type="danger" size="mini" icon="el-icon-delete" @click="deleteRow(scope.row.id)"
+              >删除
+            </el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -137,7 +150,7 @@
         @size-change="handleSizeChange"
         @current-change="handleCurrentChange"
         :current-page="listQuery.page"
-        :page-sizes="[10, 20, 30, 40]"
+        :page-sizes="[15, 20, 30, 40]"
         :page-size="listQuery.limit"
         layout="total, sizes, prev, pager, next, jumper"
         :total="total"
@@ -146,7 +159,7 @@
     </el-card>
     <el-dialog
       v-cloak
-      title="留言详情"
+      title="问答详情"
       @close="closeDialog"
       center
       :visible.sync="dialogShow"
@@ -178,37 +191,25 @@
           <el-row>
             <el-col :span="10">
               <el-form-item label="留言人:" prop="productCategory">
-                <el-input v-model="form.commenter" readonly></el-input>
+                <el-input v-model="form.userName" readonly></el-input>
               </el-form-item>
             </el-col>
             <el-col :span="12">
-              <el-form-item label="联系方式:" prop="productCategory">
-                <el-input v-model="form.commenterPhone" readonly></el-input>
-              </el-form-item>
-            </el-col>
-          </el-row>
-          <el-row>
-            <el-col :span="10">
               <el-form-item label="留言时间:" prop="productCategory">
-                <el-input v-model="form.messageTime" readonly></el-input>
-              </el-form-item>
-            </el-col>
-            <el-col :span="12">
-              <el-form-item label="审核状态:" prop="productCategory">
-                <el-input v-model="form.status" readonly></el-input>
+                <el-input v-model="form.time" readonly></el-input>
               </el-form-item>
             </el-col>
           </el-row>
         </el-tabs>
         <el-divider></el-divider>
       </el-form>
-      <el-form :model="replyForm" label-width="100px" class="demo-ruleForm" ref="replyRow">
+      <el-form :model="form" label-width="100px" class="demo-ruleForm" ref="replyRow">
         <el-tabs type="border-card" style="margin-top: 2rem">
           <el-row>
             <el-col :span="22">
               <el-form-item label="回复内容:">
                 <el-input
-                  v-model="replyForm.content"
+                  v-model="form.replyContent"
                   placeholder="请输入回复内容"
                   type="textarea"
                   :autosize="{ minRows: 3, maxRows: 5 }"
@@ -219,12 +220,12 @@
           <el-row>
             <el-col :span="11">
               <el-form-item label="回复人:">
-                <el-input v-model="replyForm.responder" placeholder="请输入回复人"></el-input>
+                <el-input v-model="form.expertName" placeholder="请输入回复人"></el-input>
               </el-form-item>
             </el-col>
             <el-col :span="11">
               <el-form-item label="回复时间:">
-                <el-input v-model="replyForm.replyTime" readonly></el-input>
+                <el-input v-model="form.replyTime" readonly></el-input>
               </el-form-item>
             </el-col>
           </el-row>
@@ -241,22 +242,13 @@
 <script>
 import userService from '../../globals/service/user';
 
-const stateTypeOptions = [
-  { key: '待审核', display_name: '待审核' },
-  { key: '审核通过', display_name: '审核通过' }
-];
 const replyStateOptions = [
   { key: '0', display_name: '未回复' },
   { key: '1', display_name: '已回复' }
 ];
-const targetSystem = '公益性子系统';
 export default {
   data() {
     return {
-      // 当前系统名称
-      targetSystem,
-      //审核状态
-      stateTypeOptions,
       // 回复状态
       replyStateOptions,
       // 分页
@@ -274,30 +266,25 @@ export default {
       // 搜索条件
       listQuery: {
         page: 1,
-        limit: 10,
-        status: '', //审核状态
-        isReply: '', // 回复状态
-        targetSystem: targetSystem //目标系统
+        limit: 15,
+        title: '', //标题
+        userName: '', // 留言人
+        expertName: '', //专家
+        state: '' // 回复状态
       },
       // 表单
       form: {
         id: '', // id
         title: '', //标题
         content: '', // 内容
-        messageTime: '', // 留言时间
+        time: '', // 留言时间
         userid: '', // 留言人id
-        commenter: '', // 留言人
-        commenterPhone: '', // 留言人联系方式
-        address: '', // 地址
-        targetSystem: '', // 目标系统
-        isReply: '', // 是否已回复
-        status: '' // 留言状态
-      },
-      replyForm: {
-        qaId: '', // 回复id
-        content: '', // 回复内容
+        userName: '', // 留言人
+        replyContent: '', // 回复内容
         replyTime: '', // 回复时间
-        responder: '' // 回复人
+        score: '', // 评分
+        state: '', // 回复状态
+        expertName: '' // 回复人
       },
       row: {},
       // el-table的数据
@@ -316,7 +303,7 @@ export default {
     async getAllList() {
       this.listLoading = true;
       let params = this.listQuery;
-      userService.getQAInfoByPage(params).then(res => {
+      userService.getConsultInfoByPage(params).then(res => {
         if (res.status !== 200) return this.$message.error('获取失败');
         this.tables = res.data.rows;
         this.total = res.data.total;
@@ -331,50 +318,17 @@ export default {
     replyRow(row) {
       this.flag = 'reply';
       this.form = row;
-      this.replyForm = {
-        replyTime: this.$moment(new Date()).format('YYYY-MM-DD HH:mm:ss')
-      };
-      if (row.isReply === 1) {
-        userService.getQAReplyInfo(row.id).then(res => {
-          if (res.status === 200) {
-            console.log('获取回复信息成功');
-            this.replyForm = res.data[0];
-          }
-        });
-      }
-      console.log(this.replyForm);
+      (this.form.replyTime = this.$moment(new Date()).format('YYYY-MM-DD HH:mm:ss')), (this.form.state = 1);
       this.dialogShow = true;
     },
     submitRow() {
-      // 指定回复留言id
-      this.replyForm.qaId = this.form.id;
-      // 回复时间
-      this.replyForm.replyTime = this.$moment(new Date()).format('YYYY-MM-DD HH:mm:ss');
-      if (this.form.isReply === 0) {
-        console.log('需要新增回复留言');
-        userService.replyQAById(this.replyForm).then(res => {
-          if (res.status === 200) {
-            this.$message({
-              message: `回复成功`,
-              type: 'success'
-            });
-            this.dialogShow = false;
-            this.getAllList();
-          }
-        });
-      } else {
-        console.log('更新回复留言的内容');
-        userService.updateReplyQAInfo(this.replyForm).then(res => {
-          if (res.status === 200) {
-            this.$message({
-              message: `更新回复消息成功`,
-              type: 'success'
-            });
-            this.dialogShow = false;
-            this.getAllList();
-          }
-        });
-      }
+      console.log(this.form);
+      userService.updateConsultInfo(this.form).then(res => {
+        if (res.status !== 200) return this.$message.error('失败');
+        this.$message.success('更新成功');
+        this.dialogShow = false;
+        this.getAllList();
+      });
     },
     // 修改审核状态
     handleModifyStatus(row, status) {
@@ -399,8 +353,22 @@ export default {
           this.$message({ type: 'info', message: '已取消操作' });
         });
     },
-    deleteRow(row) {
-      console.log(row);
+    async deleteRow(id) {
+      console.log(id);
+      let ids = [];
+      ids.push(id);
+      const confirmResult = await this.$confirm('此操作将删除该问答信息,是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).catch(err => err);
+      if (confirmResult !== 'confirm') return this.$message.info('已经取消删除');
+      userService.delConsultById(ids).then(res => {
+        console.log(res);
+        if (res.status !== 200) return this.$message.error('删除问答信息失败');
+        this.$message.success('删除问答信息成功');
+        this.getAllList();
+      });
     },
     // 每页多少条
     handleSizeChange(val) {
@@ -422,6 +390,7 @@ export default {
       this.row = {};
       this.$refs.row.clearValidate();
       this.$refs.replyRow.clearValidate();
+      this.getAllList();
     }
   }
 };

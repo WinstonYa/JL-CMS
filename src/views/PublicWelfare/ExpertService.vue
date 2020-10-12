@@ -18,6 +18,14 @@
           @input="handleFilter"
           placeholder="专家名称"
         ></el-input>
+        <el-input
+                v-model="listQuery.serviceArea"
+                size="small"
+                style="width: 120px;margin-left: 20px"
+                clearable
+                @input="handleFilter"
+                placeholder="服务地区"
+        ></el-input>
         <el-button
           class="filter-item"
           size="small"
@@ -100,7 +108,7 @@
         <el-table-column align="center" label="操作" width="200">
           <template slot-scope="scope">
             <el-button size="mini" type="primary" icon="el-icon-edit" @click="editDialogRow(scope.row)">编辑</el-button>
-            <el-button size="mini" type="danger" icon="el-icon-delete" @click="deleteRow(scope.row)">删除</el-button>
+            <el-button size="mini" type="danger" icon="el-icon-delete" @click="deleteRow(scope.row.id)">删除</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -108,9 +116,9 @@
       <el-pagination
         @size-change="handleSizeChange"
         @current-change="handleCurrentChange"
-        :current-page="listQuery.pageNum"
-        :page-sizes="[5, 10, 15, 20]"
-        :page-size="listQuery.pageRow"
+        :current-page="listQuery.page"
+        :page-sizes="[15, 20, 25, 30]"
+        :page-size="listQuery.limit"
         layout="total, sizes, prev, pager, next, jumper"
         :total="total"
       >
@@ -191,17 +199,21 @@
 
             <el-row>
               <el-col :span="12" class="register-upload">
-                <el-form-item label="专家照片:">
+                <el-form-item label="上传专家照片:">
                   <el-upload
                     class="avatar-uploader"
                     :action="updateUrl"
                     :show-file-list="false"
                     :http-request="httpRequest"
                     :before-upload="beforeAvatarUpload"
+                    :on-preview="handleProductPreview"
                   >
                     <img v-if="imageUrl" :src="imageUrl" class="avatar" />
                     <i v-else class="el-icon-plus avatar-uploader-icon"></i>
                   </el-upload>
+                  <el-dialog :visible.sync="dialogProductVisible" width="70%" top="5vh" :append-to-body="true">
+                    <img width="100%" :src="imageUrl" alt="" />
+                  </el-dialog>
                 </el-form-item>
               </el-col>
             </el-row>
@@ -226,8 +238,9 @@ export default {
       // 搜索条件
       listQuery: {
         page: 1,
-        limit: 10,
-        expertName: '' // 专家姓名
+        limit: 15,
+        expertName: '', // 专家姓名
+        serviceArea: '' // 服务地区
       },
       total: 0,
       // 数据列表
@@ -250,6 +263,7 @@ export default {
       // 图片文件上传
       updateUrl: '#',
       imageUrl: '',
+      dialogProductVisible: false,
       // 上传文件
       multfileImg: null,
       //提交状态
@@ -266,6 +280,10 @@ export default {
     };
   },
   methods: {
+    handleProductPreview(file) {
+      this.imageUrl = file.url;
+      this.dialogProductVisible = true;
+    },
     // 获取供求信息
     getList() {
       this.listLoading = true;
@@ -301,23 +319,38 @@ export default {
       this.row = {};
       userService.getExpertInfo(row.id).then(res => {
         this.row = res.data;
-        this.imageUrl = 'http://' + res.data.photo;
+        this.imageUrl =  res.data.photo;
+        console.log(this.imageUrl);
       });
       this.dialogShow = true;
     },
     //获取分页每页显示数据条数
     handleSizeChange(newSize) {
-      this.listQuery.page = newSize;
+      this.listQuery.limit = newSize;
       this.getList();
     },
     //获取当前分页页数
     handleCurrentChange(newPage) {
-      this.listQuery.limit = newPage;
+      this.listQuery.page = newPage;
       this.getList();
     },
     // 删除
-    deleteRow(row) {
-      console.log(row);
+    async deleteRow(id) {
+      console.log(id);
+      let ids = [];
+      ids.push(id);
+      const confirmResult = await this.$confirm('此操作将删除该专家信息,是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).catch(err => err);
+      if (confirmResult !== 'confirm') return this.$message.info('已经取消删除');
+      userService.delExpertById(ids).then(res => {
+        console.log(res);
+        if (res.status !== 200) return this.$message.error('删除专家信息失败');
+        this.$message.success('删除专家信息成功');
+        this.getList();
+      });
     },
     DialogClose() {
       this.row = {};
@@ -353,7 +386,6 @@ export default {
     },
     // 提交 供求信息
     submitRow() {
-      console.log(this.imageUrl);
       let formData = new FormData();
       formData.append('file', this.multfileImg);
       formData.append('expertName', this.row.expertName); //专家姓名
@@ -395,8 +427,8 @@ export default {
   .avatar-uploader .el-upload {
     border: 1px dashed #d9d9d9;
     border-radius: 6px;
-    width: 220px;
-    height: 220px;
+    width: 120px;
+    height: 120px;
     cursor: pointer;
     position: relative;
     overflow: hidden;
@@ -409,15 +441,15 @@ export default {
   .avatar-uploader-icon {
     font-size: 28px;
     color: #8c939d;
-    width: 220px;
-    height: 220px;
-    line-height: 220px;
+    width: 120px;
+    height: 120px;
+    line-height: 120px;
     text-align: center;
   }
 
   .avatar {
-    width: 220px;
-    height: 220px;
+    width: 120px;
+    height: 120px;
     display: block;
   }
 }

@@ -1,9 +1,15 @@
-const PREFIX_API_1 = 'http://192.168.8.107:8776'; // 电子商务系统
-const PREFIX_API_2 = 'http://192.168.8.107:8766'; //信息追溯系统
+const PREFIX_API_1 = 'http://192.168.8.166:8776'; // 电子商务系统
+const PREFIX_API_2 = 'http://192.168.8.166:8766'; //信息追溯系统
+// const PREFIX_API_2 = 'http://192.168.8.133:8766'; //信息追溯系统 ws
 // const PREFIX_API_3 = 'http://192.168.8.133:8777'; //公益性子系统
-const PREFIX_API_3 = 'http://192.168.8.107:8777'; //公益性子系统 cj
+// const PREFIX_API_3 = 'http://192.168.8.124:8777'; //公益性子系统 cj
+const PREFIX_API_3 = 'http://192.168.8.124:8777'; //公益性子系统 ws
 
 export default {
+  // 用户登录
+  login: `${PREFIX_API_1}/user/login`,
+  // 获取当前用户信息
+  getUserInfo: `${PREFIX_API_1}/user/getCurrentUser`,
   //追溯信息系统
   //文章管理获取文章列表
   articleList: `${PREFIX_API_2}/article/list`,
@@ -32,16 +38,28 @@ export default {
   businessDirectoryEdit: `${PREFIX_API_2}/company/updateCompanyInfo`,
   //删除企业名录
   businessDirectoryDel: id => `${PREFIX_API_2}/company/del?ids=${id}`,
+  //获取轮播图列表
+  getInformationSwiperList: `${PREFIX_API_2}/carousel/page`,
+  //修改轮播图发布状态
+  swiperStatusEdit: `${PREFIX_API_2}/carousel/updateStatus`,
+  //删除轮播图信息
+  swiperInformationDelete: id => `${PREFIX_API_2}/carousel/del?id=${id}`,
+  //获取投诉建议列表
+  getSuggestList: `${PREFIX_API_2}/suggest/listByType`,
+  //修改投诉建议处理状态
+  suggestStatusEdit: `${PREFIX_API_2}/suggest/deal`,
 
   // 电子商务系统
   // 分页获取优质农产品列表
   getProductListByPage: `${PREFIX_API_1}/perfectProduct/listByPage`,
   // 新增优质农产品
-  addHighQualityProduct: `${PREFIX_API_1}/perfectProduct/addNewQualityProduct`,
+  addHighQualityProduct: `${PREFIX_API_1}/perfectProduct/add`,
   // 更新优质农产品
   updateHighQualityProduct: `${PREFIX_API_1}/perfectProduct/updateQualityProduct`,
   // 更新优质农产品审核状态
   ModifyProductStatus: `${PREFIX_API_1}/perfectProduct`,
+  // 删除优质农产品信息
+  delHighQualityProductById: id => `${PREFIX_API_1}/perfectProduct/del?ids=${id}`,
   // 根据留言id获取回复消息
   getQAReplyInfo: `${PREFIX_API_1}/reply/getReplyByqaId`,
   // 更新留言审核状态
@@ -63,7 +81,7 @@ export default {
   // 价格行情
   priceInfo: `${PREFIX_API_1}/price`,
   // 分页获取供求信息
-  getSupplyDemandListByPage: `${PREFIX_API_3}/supplydemand/listByPage`,
+  getSupplyDemandListByPage: `${PREFIX_API_3}/supplydemand/allByPage`,
   // 供求信息
   SupplyDemandInfo: `${PREFIX_API_3}/supplydemand`,
   // 新增供求信息
@@ -72,13 +90,35 @@ export default {
   getSupplyDemandById: `${PREFIX_API_3}/supplydemand/getSupplyDemandById`,
   // 更新供求信息
   updateSupplyDemand: `${PREFIX_API_3}/supplydemand/updateSupplyDemand`,
+  delSupplyDemandById: id => `${PREFIX_API_3}/supplydemand/del?ids=${id}`,
 
+  //公益性系统
   // 分页获取专家信息
-  getExpertList: `${PREFIX_API_3}/expert/getExpertInfoListByPage`,
+  getExpertList: `${PREFIX_API_3}/expert/getExpertInfoList`,
   // 获取一条专家信息
   getExpertInfo: `${PREFIX_API_3}/expert/getExpert/`,
   // 新增一条专家信息
   addExpertInfo: `${PREFIX_API_3}/expert/addExpert`,
   // 更新一条专家信息
-  updateExpert: `${PREFIX_API_3}/expert/updateExpert`
+  updateExpert: `${PREFIX_API_3}/expert/updateExpert`,
+  // 删除专家信息
+  delExpertById: id => `${PREFIX_API_3}/expert/del?ids=${id}`,
+  //分页获取农业问答
+  getConsultInfoByPage: `${PREFIX_API_3}/consult/getPageByState`,
+  // 更新农业问答
+  updateConsultInfo: `${PREFIX_API_3}/consult/update`,
+  // 删除农业问答
+  delConsultById: id => `${PREFIX_API_3}/consult/del?ids=${id}`,
+
+  // 分页获取视频列表
+  getVideoList: `${PREFIX_API_1}/video/videosByPage`,
+  //新增视频信息
+  videoInfoAdd: `${PREFIX_API_1}/video/addVideo`,
+  //删除视频信息
+  videoInfoDel: id => `${PREFIX_API_1}/video/del?ids=${id}`,
+
+  // 新增轮播图
+  addCarousel: `${PREFIX_API_2}/carousel/add`,
+  // 更新轮播图
+  updateCarousel: `${PREFIX_API_2}/carousel/update`
 };

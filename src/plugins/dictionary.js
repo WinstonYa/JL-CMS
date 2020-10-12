@@ -1,9 +1,7 @@
-let gyxArticleType = [
-  {
+let gyxArticleType = [{
     value: '农业政策',
     label: '农业政策',
-    children: [
-      {
+    children: [{
         value: '时政要闻',
         label: '时政要闻'
       },
@@ -24,8 +22,7 @@ let gyxArticleType = [
   {
     value: '农业百科',
     label: '农业百科',
-    children: [
-      {
+    children: [{
         value: '水产养殖技术',
         label: '水产养殖技术'
       },
@@ -45,29 +42,64 @@ let gyxArticleType = [
   }
 ];
 
-let dzswArticleType = [
-  {
-    value: '新闻动态',
-    label: '新闻动态',
-    children: [
-      {
-        value: '政策法规类',
-        label: '政策法规类'
-      },
-      {
-        value: '种植知识类',
-        label: '种植知识类'
-      },
-      {
-        value: '农事指导类',
-        label: '农事指导类'
-      },
-      {
-        value: '管理资讯类',
-        label: '管理资讯类'
-      }
-    ]
-  }
-];
+let dzswArticleType = [{
+  value: '新闻动态',
+  label: '新闻动态',
+  children: [{
+      value: '政策法规类',
+      label: '政策法规类'
+    },
+    {
+      value: '种植知识类',
+      label: '种植知识类'
+    },
+    {
+      value: '农事指导类',
+      label: '农事指导类'
+    },
+    {
+      value: '管理资讯类',
+      label: '管理资讯类'
+    }
+  ]
+}];
 
-export { gyxArticleType, dzswArticleType };
+const informationSystemArticleType = [{
+    value: '1',
+    label: '政策法规'
+  },
+  {
+    value: '2',
+    label: '农业要闻'
+  },
+  {
+    value: '3',
+    label: '全区联播'
+  },
+  {
+    value: '4',
+    label: '种植技术'
+  },
+  {
+    value: '5',
+    label: '水产养殖技术'
+  },
+  {
+    value: '6',
+    label: '畜牧兽医技术'
+  },
+  {
+    value: '7',
+    label: '农机技术'
+  },
+  {
+    value: '8',
+    label: '时政要闻'
+  }
+]
+
+export {
+  gyxArticleType,
+  dzswArticleType,
+  informationSystemArticleType
+};

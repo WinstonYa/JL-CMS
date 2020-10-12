@@ -351,7 +351,7 @@ export default {
         this.$refs.row.validate(async valid => {
           if (!valid) return this.$message.error('信息填写不完整或不准确，请检查再提交！');
           console.log(this.$moment(new Date(this.form.offerTime)).format('YYYY-MM-DD HH:mm:ss'));
-          this.form.offerTime = this.$moment(new Date(this.form.offerTime)).format('YYYY-MM-DD HH:mm:ss');
+          this.form.offerTime = this.$moment(new Date()).format('YYYY-MM-DD HH:mm:ss');
           // const { data: res } = await this.$http.post('/price', this.form);
 
           userService.addPriceInfo(this.form).then(res => {
@@ -371,6 +371,7 @@ export default {
     //编辑价格行情的提交
     async editPriceInfoSubmit() {
       // const { data: res } = await this.$http.put('/price', this.form);
+      this.form.offerTime = this.$moment(new Date(this.form.offerTime)).format('YYYY-MM-DD HH:mm:ss');
       userService.updatePriceInfo(this.form).then(res => {
         if (res.status !== 200) return this.$message.error('更新失败');
         // 关闭对话框

@@ -11,8 +11,12 @@
     <!-- 页面主体 -->
     <el-container>
       <!-- 侧边栏 -->
-      <el-aside :width="isCollapse ? '64px' : '260px'">
-        <div class="toggle-button" @click="toggleCollapse">|||</div>
+      <el-aside :width="isCollapse ? '64px' : '260px'" class=" page-left">
+        <div class="sidebar-header">
+          <div class="collapse-icon-container" @click="toggleCollapse">
+            <img class="collapse-icon" :class="{ unfold: isCollapse }" src="@/assets/images/fold.png" />
+          </div>
+        </div>
         <!-- 侧边栏菜单 -->
         <el-menu
           background-color="#333744"
@@ -151,7 +155,7 @@ export default {
             {
               id: 6,
               systemItem: '轮播图管理',
-              path: 'information-system-admin-swiper',
+              path: 'public-welfare-swiper',
               icon: 'iconfont icon-lunbotu'
             }
           ]
@@ -181,20 +185,14 @@ export default {
             },
             {
               id: 4,
-              systemItem: '监督管理',
-              path: 'supervision-admin',
-              icon: 'iconfont icon-jiandukaohe'
-            },
-            {
-              id: 5,
               systemItem: '投诉建议管理',
               path: 'complaint-advice',
               icon: 'iconfont icon-tousuyujianyi'
             },
             {
-              id: 6,
+              id: 5,
               systemItem: '轮播图管理',
-              path: 'public-welfare-swiper',
+              path: 'information-system-admin-swiper',
               icon: 'iconfont icon-lunbotu'
             }
           ]
@@ -252,6 +250,7 @@ export default {
 .home-container {
   height: 100%;
 }
+
 .el-header {
   background-color: #373d41;
   display: flex;
@@ -273,22 +272,51 @@ export default {
     }
   }
 }
+
 .el-aside {
   background-color: #333744;
   .el-menu {
     border-right: none;
   }
 }
+
 .el-main {
   background-color: #eaedf1;
 }
-.toggle-button {
-  background-color: #4a5064;
-  font-size: 10px;
-  line-height: 24px;
-  color: #fff;
-  text-align: center;
-  letter-spacing: 0.2em;
-  cursor: pointer;
+
+.page-left {
+  z-index: 101;
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  width: 246px;
+  transition: all 0.2s ease-out;
+  box-shadow: 2px 0 6px rgba(0, 21, 41, 0.35);
+  .sidebar-header {
+    flex: none;
+    padding: 8px;
+    height: 48px;
+    overflow: hidden;
+    box-shadow: 2px 0 6px rgba(0, 21, 41, 0.35);
+    .collapse-icon-container {
+      height: 32px;
+      text-align: center;
+      background: #4a5064;
+      border-radius: 3px;
+      cursor: pointer;
+      &:hover {
+        background: #495170;
+      }
+      .collapse-icon {
+        margin-top: 6px;
+        width: 20px;
+        height: 20px;
+        transition: all 0.2s ease-out;
+        &.unfold {
+          transform: rotate(-180deg);
+        }
+      }
+    }
+  }
 }
 </style>

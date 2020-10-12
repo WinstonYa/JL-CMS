@@ -7,7 +7,7 @@
       <el-breadcrumb-item>企业名录管理</el-breadcrumb-item>
     </el-breadcrumb>
 
-    <!-- 卡品视图区域 -->
+    <!-- 卡片视图区域 -->
     <el-card>
       <!-- 添加区域 -->
       <div>
@@ -381,7 +381,6 @@ export default {
       }).catch(err => err);
       if (confirmResult !== 'confirm') return this.$message.info('已经取消删除');
       userService.businessDirectoryDel(ids).then(res => {
-        console.log(res);
         if (res.status !== 200) return this.$message.error('删除企业信息失败');
         this.$message.success('删除企业信息成功');
         this.getAllList();

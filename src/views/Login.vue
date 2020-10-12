@@ -6,11 +6,16 @@
       <el-form ref="loginFormRef" :model="loginForm" :rules="loginFormRules" label-width="0px" class="login-form">
         <!-- 用户名 -->
         <el-form-item prop="username">
-          <el-input v-model="loginForm.username" prefix-icon="el-icon-user"></el-input>
+          <el-input v-model="loginForm.username" prefix-icon="el-icon-user" placeholder="请输入用户名"></el-input>
         </el-form-item>
         <!-- 密码 -->
         <el-form-item prop="password">
-          <el-input v-model="loginForm.password" prefix-icon="el-icon-lock" type="password"></el-input>
+          <el-input
+            v-model="loginForm.password"
+            prefix-icon="el-icon-lock"
+            type="password"
+            placeholder="请输入密码"
+          ></el-input>
         </el-form-item>
         <!-- 按钮区域 -->
         <el-form-item class="btns">
@@ -23,6 +28,9 @@
 </template>
 
 <script>
+import userService from '../globals/service/user';
+import DataStore from '@/globals/storage/index';
+
 export default {
   data() {
     return {
@@ -82,8 +90,39 @@ export default {
     login() {
       this.$refs.loginFormRef.validate(valid => {
         if (!valid) return;
-        this.$message.success('登录成功！');
-        this.$router.push('/home');
+        let params = {
+          username: this.loginForm.username,
+          password: this.loginForm.password
+        };
+        userService
+          .login(params)
+          .then(res => {
+            if (res.status === 200) {
+              let token = res.data;
+              let tk = {
+                Authorization: token
+              };
+              DataStore.setToken(res.data);
+              userService.getUserInfo(tk).then(res => {
+                console.log(res.data);
+                if (res.status === 200) {
+                  if (res.data.targetSystem === '后台管理系统') {
+                    this.$message.success('登录成功！');
+                    localStorage.setItem('token', token);
+                    localStorage.setItem('userInfo', JSON.stringify(res.data));
+                    this.$router.push('/home');
+                  } else {
+                    this.$message.warning('您没有使用后台管理系统的权限，请联系管理员！');
+                  }
+                }
+              });
+            } else if (res.status === 500) {
+              this.$message.info('该用户不存在或密码错误！');
+            }
+          })
+          .catch(ex => {
+            this.$message.error('登录异常！', ex);
+          });
       });
     }
   }
@@ -120,10 +159,12 @@ export default {
     left: 0;
   }
 }
+
 .login-form {
   margin-top: 100px;
   padding: 0 30px;
 }
+
 .btns {
   display: flex;
   justify-content: flex-end;

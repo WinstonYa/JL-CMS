@@ -33,6 +33,7 @@
       <el-table
         :height="curHeight"
         :data="articleList"
+        v-loading="listLoading"
         border
         stripe
         fit
@@ -125,7 +126,7 @@
             <el-row>
               <el-col :span="12">
                 <el-form-item label="发布系统:" prop="systemId">
-                  <el-select v-model="row.systemId" multiple placeholder="请选择发布系统" style="width:328px">
+                  <el-select v-model="row.systemId" multiple placeholder="请选择发布系统" style="width:100%">
                     <el-option
                       v-for="item in sysOptions"
                       :key="item.label"
@@ -173,6 +174,8 @@
 
 <script>
 import userService from '@/globals/service/user.js';
+import { informationSystemArticleType } from '../../plugins/dictionary';
+
 export default {
   data() {
     return {
@@ -182,6 +185,8 @@ export default {
       pageNum: 1,
       // 当前每页显示数据条数
       pageSize: 10,
+      //加载动画
+      listLoading: false,
       //系统类型
       sysType: '追溯信息系统',
       //文章类型
@@ -238,40 +243,7 @@ export default {
         author: [{ required: true, message: '请输入作者', trigger: 'blur' }],
         articleStatus: [{ required: true, message: '请输入状态', trigger: 'blur' }]
       },
-      options: [
-        {
-          value: '1',
-          label: '政策法规'
-        },
-        {
-          value: '2',
-          label: '农业要闻'
-        },
-        {
-          value: '3',
-          label: '全区联播'
-        },
-        {
-          value: '4',
-          label: '种植技术'
-        },
-        {
-          value: '5',
-          label: '水产养殖技术'
-        },
-        {
-          value: '6',
-          label: '畜牧兽医技术'
-        },
-        {
-          value: '7',
-          label: '农机技术'
-        },
-        {
-          value: '8',
-          label: '时政要闻'
-        }
-      ],
+      options: informationSystemArticleType,
       //系统选择框
       sysOptions: [
         {
@@ -345,6 +317,7 @@ export default {
     //获取文章列表
     getArticleList() {
       let status = this.activeName == 'first' ? '1' : '0';
+      this.listLoading = true;
       let params = {
         pageNum: this.pageNum,
         pageRow: this.pageSize,
@@ -354,6 +327,7 @@ export default {
       };
       userService.getArticleList(params).then(res => {
         if (res.status !== 200) return this.$message.error('获取文章列表失败');
+        this.listLoading = false;
         this.articleList = res.data.rows;
         this.total = res.data.total;
       });

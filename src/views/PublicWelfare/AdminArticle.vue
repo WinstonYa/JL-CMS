@@ -3,16 +3,16 @@
     <!-- 面包屑导航区域 -->
     <el-breadcrumb separator-class="el-icon-arrow-right">
       <el-breadcrumb-item :to="{ path: '/home' }">首页</el-breadcrumb-item>
-      <el-breadcrumb-item>公益性子系统</el-breadcrumb-item>
+      <el-breadcrumb-item>农产品追溯信息系统</el-breadcrumb-item>
       <el-breadcrumb-item>文章管理</el-breadcrumb-item>
     </el-breadcrumb>
     <el-tabs v-model="activeName" @tab-click="handleClick">
       <!-- 文章管理栏 -->
-      <el-tab-pane label="文章管理" name="first"></el-tab-pane>
+      <el-tab-pane label="文章管理" name="first"> </el-tab-pane>
       <!-- 未发布文章管理栏 -->
-      <el-tab-pane label="未发布文章管理" name="second"></el-tab-pane>
+      <el-tab-pane label="未发布文章管理" name="second"> </el-tab-pane>
       <!-- 文章回收站栏 -->
-      <el-tab-pane label="文章回收站" name="third"></el-tab-pane>
+      <el-tab-pane label="文章回收站" name="third"> </el-tab-pane>
     </el-tabs>
 
     <el-card class="article-card">
@@ -20,40 +20,32 @@
       <el-button type="danger" size="small" icon="el-icon-delete" @click="handleBatchRemoveArticle()"
         >批量删除文章</el-button
       >
-      <el-button type="primary" size="small" icon="el-icon-circle-plus" @click="addRow">添加文章</el-button>
-      <el-cascader
+      <el-button type="primary" size="small" icon="el-icon-circle-plus" @click="dialogShow = true">添加文章</el-button>
+      <el-select
         class="article-select-admin"
-        type="small"
+        @change="selectArticleTypeList"
         v-model="articleType"
-        :options="options"
-        :show-all-levels="false"
-        @change="articleTypeChange"
-      ></el-cascader>
-      <!--      <el-select-->
-      <!--        class="article-select-admin"-->
-      <!--        @change="selectArticleTypeList"-->
-      <!--        v-model="articleType"-->
-      <!--        placeholder="请选择文章类型"-->
-      <!--      >-->
-      <!--        <el-option v-for="item in options" :key="item.value" :label="item.label" :value="item.value"> </el-option>-->
-      <!--        -->
-      <!--      </el-select>-->
+        placeholder="请选择文章类型"
+      >
+        <el-option v-for="item in options" :key="item.value" :label="item.label" :value="item.value"> </el-option>
+      </el-select>
       <!-- 表格显示区域 -->
       <el-table
+        :height="curHeight"
         :data="articleList"
+        v-loading="listLoading"
         border
         stripe
         fit
         highlight-current-row
         :row-style="{ height: '5px' }"
         :cell-style="{ padding: '5px 0' }"
-        :height="curHeight"
         @selection-change="checkSelect"
       >
         <el-table-column type="selection" width="40" label="全选"></el-table-column>
         <el-table-column align="center" label="序号" width="60">
           <template slot-scope="scope">
-            {{ (listQuery.pageNum - 1) * listQuery.pageRow + scope.$index + 1 }}
+            {{ (pageNum - 1) * pageSize + scope.$index + 1 }}
           </template>
         </el-table-column>
         <el-table-column align="center" label="标题" min-width="160">
@@ -76,9 +68,9 @@
         <el-table-column align="center" label="操作" width="200">
           <template slot-scope="scope">
             <el-button size="mini" type="primary" icon="el-icon-edit" @click="editDialogRow(scope.row.id)"
-              >编辑
-            </el-button>
-            <el-button size="mini" type="danger" icon="el-icon-delete" @click="deleteRow(scope.row)">删除 </el-button>
+              >编辑</el-button
+            >
+            <el-button size="mini" type="danger" icon="el-icon-delete" @click="deleteRow(scope.row)">删除</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -86,9 +78,9 @@
       <el-pagination
         @size-change="handleSizeChange"
         @current-change="handleCurrentChange"
-        :current-page="listQuery.pageNum"
+        :current-page="pageNum"
         :page-sizes="[5, 10, 15, 20]"
-        :page-size="listQuery.pageRow"
+        :page-size="pageSize"
         layout="total, sizes, prev, pager, next, jumper"
         :total="total"
       >
@@ -134,7 +126,7 @@
             <el-row>
               <el-col :span="12">
                 <el-form-item label="发布系统:" prop="systemId">
-                  <el-select v-model="row.systemId" multiple placeholder="请选择发布系统" style="width:328px">
+                  <el-select v-model="row.systemId" multiple placeholder="请选择发布系统" style="width:100%">
                     <el-option
                       v-for="item in sysOptions"
                       :key="item.label"
@@ -182,22 +174,25 @@
 
 <script>
 import userService from '@/globals/service/user.js';
-import { gyxArticleType } from '../../plugins/dictionary';
+import { informationSystemArticleType } from '../../plugins/dictionary';
 
 export default {
   data() {
     return {
       //提交状态
       flag: 'add',
-      // 搜索条件
-      listQuery: {
-        pageNum: 1,
-        pageRow: 10,
-        sysType: '公益性系统',
-        articleType: '', //文章类型
-        status: '' // 发布状态
-      },
-      articleType: '',
+      // 当前的页数
+      pageNum: 1,
+      // 当前每页显示数据条数
+      pageSize: 10,
+      //加载动画
+      listLoading: false,
+      //系统类型
+      sysType: '公益性系统',
+      //文章类型
+      articleType: '政策法规',
+      //发布状态
+      status: 1,
       total: 0,
       articleList: [],
       activeName: 'first',
@@ -248,7 +243,7 @@ export default {
         author: [{ required: true, message: '请输入作者', trigger: 'blur' }],
         articleStatus: [{ required: true, message: '请输入状态', trigger: 'blur' }]
       },
-      options: gyxArticleType,
+      options: informationSystemArticleType,
       //系统选择框
       sysOptions: [
         {
@@ -257,20 +252,18 @@ export default {
         },
         {
           value: '2',
-          label: '电子商务系统',
+          label: '追溯信息系统',
           disabled: true
         },
         {
           value: '3',
-          label: '追溯信息系统',
+          label: '电子商务系统',
           disabled: true
         }
       ]
     };
   },
   created() {
-    this.articleType = gyxArticleType[0].children[0].value;
-    this.listQuery.articleType = this.articleType;
     this.getArticleList();
     this.setTableHeight();
     window.onresize = () => {
@@ -278,6 +271,11 @@ export default {
     };
   },
   methods: {
+    // 设定表格高度
+    setTableHeight() {
+      let h = document.documentElement.clientHeight || document.body.clientHeight;
+      this.curHeight = h - 300;
+    },
     //全选框事件
     checkSelect(data) {
       console.log(data);
@@ -287,11 +285,6 @@ export default {
     //点击tab栏事件
     handleClick() {
       this.getArticleList();
-    },
-    // 设定表格高度
-    setTableHeight() {
-      let h = document.documentElement.clientHeight || document.body.clientHeight;
-      this.curHeight = h - 300;
     },
     //获取增加文章下拉框选择的值
     selectArticleType(val) {
@@ -324,41 +317,33 @@ export default {
     //获取文章列表
     getArticleList() {
       let status = this.activeName == 'first' ? '1' : '0';
-      this.listQuery.status = status;
-      userService
-        .getArticleList(this.listQuery)
-        .then(res => {
-          if (res.status !== 200) return this.$message.error('获取文章列表失败');
-          this.articleList = res.data.rows;
-          this.total = res.data.total;
-        })
-        .catch(res => {
-          console.log(res);
-        });
-    },
-    // 文章类型选择事件
-    articleTypeChange(value) {
-      this.listQuery.articleType = value[1];
-      this.getArticleList();
+      this.listLoading = true;
+      let params = {
+        pageNum: this.pageNum,
+        pageRow: this.pageSize,
+        sysType: this.sysType,
+        articleType: this.articleType,
+        status
+      };
+      userService.getArticleList(params).then(res => {
+        if (res.status !== 200) return this.$message.error('获取文章列表失败');
+        this.listLoading = false;
+        this.articleList = res.data.rows;
+        this.total = res.data.total;
+      });
     },
     //获取分页每页显示数据条数
     handleSizeChange(newSize) {
-      this.listQuery.pageRow = newSize;
+      this.pageSize = newSize;
       this.getArticleList();
     },
     //获取当前分页页数
     handleCurrentChange(newPage) {
-      this.listQuery.pageNum = newPage;
+      this.pageNum = newPage;
       this.getArticleList();
     },
-    // 新增
-    addRow() {
-      this.flag = 'add';
-      this.row = {};
-      this.dialogShow = true;
-    },
     // 展示修改文章对话框
-    editDialogRow(id) {
+    async editDialogRow(id) {
       //状态
       this.flag = 'edit';
       let status = this.activeName == 'first' ? '1' : '0';

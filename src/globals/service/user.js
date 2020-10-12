@@ -2,6 +2,12 @@ import request from '@/globals/request/axios.js';
 import API from '@/globals/request/api.js';
 
 const userService = {
+  login(params) {
+    return request.post(API.login, params);
+  },
+  getUserInfo(params) {
+    return request.get(API.getUserInfo, {}, params);
+  },
   //文章管理获取文章列表
   getArticleList(params) {
     return request.get(API.articleList, params);
@@ -57,6 +63,26 @@ const userService = {
   businessDirectoryDel(id) {
     return request.delete(API.businessDirectoryDel(id));
   },
+  //获取信息系统轮播图列表
+  getInformationSwiperList(params) {
+    return request.get(API.getInformationSwiperList, params);
+  },
+  //修改轮播图发布状态
+  swiperStatusEdit(params) {
+    return request.put(API.swiperStatusEdit, params);
+  },
+  //删除轮播图信息
+  swiperInformationDelete(id) {
+    return request.delete(API.swiperInformationDelete(id));
+  },
+  //获取投诉建议列表
+  getSuggestList(formData) {
+    return request.post(API.getSuggestList, formData);
+  },
+  //修改投诉建议处理状态
+  suggestStatusEdit(formData) {
+    return request.get(API.suggestStatusEdit, formData);
+  },
 
   // 优质农产品
   // 分页获取优质农产品列表
@@ -74,6 +100,10 @@ const userService = {
   // 修改优质农产品审核状态
   ModifyProductStatus(params) {
     return request.put(API.ModifyProductStatus, params);
+  },
+  // 删除优质农产品信息
+  delHighQualityProductById(id) {
+    return request.get(API.delHighQualityProductById(id));
   },
 
   // 留言板信息
@@ -144,6 +174,10 @@ const userService = {
   updateSupplyDemand(params) {
     return request.put(API.updateSupplyDemand, params);
   },
+  // 更新供求信息 审核状态
+  updateSupplyDemandStatus(params) {
+    return request.put(API.SupplyDemandInfo, params);
+  },
   // 获取一条供求信息
   getSupplyDemand(id) {
     return request.get(API.getSupplyDemandById + '?id=' + id);
@@ -152,6 +186,11 @@ const userService = {
   addSupplyDemand(params) {
     return request.post(API.addNewSupplyDemandInfo, params);
   },
+  // 删除一条供求信息
+  delSupplyDemandById(id) {
+    return request.get(API.delSupplyDemandById(id));
+  },
+
   // 分页获取专家信息列表
   getExpertList(params) {
     return request.get(API.getExpertList, params);
@@ -167,6 +206,42 @@ const userService = {
   // 更新一条专家信息
   updateExpert(params) {
     return request.post(API.updateExpert, params);
+  },
+  // 删除一条专家信息
+  delExpertById(id) {
+    return request.get(API.delExpertById(id));
+  },
+  // 分页获取农业问答
+  getConsultInfoByPage(params) {
+    return request.get(API.getConsultInfoByPage, params);
+  },
+  // 更新一条农业问答
+  updateConsultInfo(params) {
+    return request.put(API.updateConsultInfo, params);
+  },
+  // 删除农业问答
+  delConsultById(id) {
+    return request.get(API.delConsultById(id));
+  },
+  // 分页获取视频列表
+  getVideoList(params) {
+    return request.get(API.getVideoList, params);
+  },
+  //新增视频信息
+  videoInfoAdd(formData) {
+    return request.post(API.videoInfoAdd, formData);
+  },
+  //删除视频信息
+  videoInfoDel(id) {
+    return request.delete(API.videoInfoDel(id));
+  },
+  // 新增轮播图
+  addCarousel(params) {
+    return request.post(API.addCarousel, params);
+  },
+  // 更新轮播图
+  updateCarousel(params) {
+    return request.put(API.updateCarousel, params);
   }
 };
 export default userService;

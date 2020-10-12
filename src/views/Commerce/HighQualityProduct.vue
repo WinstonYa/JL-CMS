@@ -85,6 +85,21 @@
             <span>{{ scope.row.uptTime }}</span>
           </template>
         </el-table-column>
+        <el-table-column align="center" label="描述" min-width="160">
+          <template slot-scope="scope">
+            <el-popover placement="top-start" title="描述" width="250" trigger="hover">
+              <div>{{ scope.row.description }}</div>
+              <span
+                slot="reference"
+                v-if="scope.row.hasOwnProperty('description') && JSON.stringify(scope.row.description).length > 20"
+                >{{ scope.row.description.substr(0, 20) }}...
+              </span>
+              <span v-else slot="reference">
+                {{ scope.row.description }}
+              </span>
+            </el-popover>
+          </template>
+        </el-table-column>
         <el-table-column align="center" label="状态" width="120">
           <template slot-scope="scope">
             <el-button
@@ -108,25 +123,12 @@
             </el-button>
           </template>
         </el-table-column>
-        <el-table-column align="center" label="描述" min-width="160">
-          <template slot-scope="scope">
-            <el-popover placement="top-start" title="描述" width="250" trigger="hover">
-              <div>{{ scope.row.description }}</div>
-              <span
-                slot="reference"
-                v-if="scope.row.hasOwnProperty('description') && JSON.stringify(scope.row.description).length > 20"
-                >{{ scope.row.description.substr(0, 20) }}...
-              </span>
-              <span v-else slot="reference">
-                {{ scope.row.description }}
-              </span>
-            </el-popover>
-          </template>
-        </el-table-column>
         <el-table-column align="center" label="操作" width="200">
           <template slot-scope="scope">
             <el-button type="info" size="mini" icon="el-icon-edit" @click="editRow(scope.row)">编辑 </el-button>
-            <el-button type="danger" size="mini" icon="el-icon-delete" @click="deleteRow(scope.row)">删除 </el-button>
+            <el-button type="danger" size="mini" icon="el-icon-delete" @click="deleteRow(scope.row.id)"
+              >删除
+            </el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -158,119 +160,121 @@
           <el-tab-pane label="基本信息">
             <el-row>
               <el-col :span="12">
-                <el-row>
-                  <el-col :span="24">
-                    <el-form-item label="产品分类:" prop="productCategory">
-                      <el-select
-                        v-model="row.productCategory"
-                        clearable
-                        style="width: 100%"
-                        placeholder="请选择产品分类"
-                        @change="getDic"
-                      >
-                        <el-option v-for="item in productOptions" :key="item" :label="item" :value="item"></el-option>
-                      </el-select>
-                    </el-form-item>
-                  </el-col>
-                </el-row>
-                <el-row>
-                  <el-col :span="24">
-                    <el-form-item label="产品名称:" prop="productName">
-                      <el-select
-                        v-model="row.productName"
-                        filterable
-                        style="width: 100%"
-                        placeholder="请输入产品名称关键词"
-                      >
-                        <el-option v-for="item in options" :key="item.value" :label="item.label" :value="item.value">
-                        </el-option>
-                      </el-select>
-                    </el-form-item>
-                  </el-col>
-                </el-row>
-                <el-row>
-                  <el-col :span="24">
-                    <el-form-item label="价格:">
-                      <el-input
-                        v-model="row.price"
-                        clearable
-                        onkeyup="this.value=this.value.replace(/[^\d]/g,'')"
-                        placeholder="请输入价格"
-                      ></el-input>
-                    </el-form-item>
-                  </el-col>
-                </el-row>
-                <el-row>
-                  <el-col :span="24">
-                    <el-form-item label="购买方式:" prop="purchaseWay">
-                      <el-input
-                        v-model="row.purchaseWay"
-                        clearable
-                        maxlength="50"
-                        placeholder="请输入购买方式"
-                      ></el-input>
-                    </el-form-item>
-                  </el-col>
-                </el-row>
-              </el-col>
-              <el-col :span="12" class="register-upload">
-                <el-form-item label="产品图片:">
-                  <el-upload
-                    class="avatar-uploader"
-                    :action="updateUrl"
-                    :show-file-list="false"
-                    :http-request="httpRequest"
-                    :before-upload="beforeAvatarUpload"
+                <el-form-item label="产品分类:" prop="productCategory">
+                  <el-select
+                    v-model="row.productCategory"
+                    clearable
+                    style="width: 100%"
+                    placeholder="请选择产品分类"
+                    @change="getDic"
                   >
-                    <img v-if="imageUrl" :src="imageUrl" class="avatar" />
-                    <i v-else class="el-icon-plus avatar-uploader-icon"></i>
-                  </el-upload>
+                    <el-option v-for="item in productOptions" :key="item" :label="item" :value="item"></el-option>
+                  </el-select>
+                </el-form-item>
+              </el-col>
+              <el-col :span="12">
+                <el-form-item label="产品名称:" prop="productName">
+                  <el-select
+                    v-model="row.productName"
+                    filterable
+                    style="width: 100%"
+                    placeholder="请输入产品名称关键词"
+                  >
+                    <el-option v-for="item in options" :key="item.value" :label="item.label" :value="item.value">
+                    </el-option>
+                  </el-select>
                 </el-form-item>
               </el-col>
             </el-row>
-
             <el-row>
               <el-col :span="12">
-                <el-row>
-                  <el-col :span="24">
-                    <el-form-item label="产品产地:" prop="productOrigin">
-                      <el-input v-model="row.productOrigin" clearable placeholder="请输入产品产地"></el-input>
-                    </el-form-item>
-                  </el-col>
-
-                  <el-col :span="24">
-                    <el-form-item label="状态:" prop="status">
-                      <el-radio v-model="row.status" label="待审核">待审核</el-radio>
-                      <el-radio v-model="row.status" label="审核通过">审核通过</el-radio>
-                    </el-form-item>
-                  </el-col>
-                  <el-col :span="24">
-                    <el-form-item label="热度:" prop="description">
-                      <el-input
-                        v-model="row.popularity"
-                        clearable
-                        onkeyup="this.value=this.value.replace(/[^\d]/g,'')"
-                        maxlength="20"
-                        placeholder="请输入产品热度"
-                      ></el-input>
-                    </el-form-item>
-                  </el-col>
-                </el-row>
+                <el-form-item label="价格:">
+                  <el-input
+                    v-model="row.price"
+                    clearable
+                    onkeyup="this.value=this.value.replace(/[^\d]/g,'')"
+                    placeholder="请输入价格"
+                  ></el-input>
+                </el-form-item>
               </el-col>
               <el-col :span="12">
-                <el-row>
-                  <el-col :span="22">
-                    <el-form-item label="描述:" prop="description">
-                      <el-input
-                        v-model="row.description"
-                        clearable
-                        type="textarea"
-                        :autosize="{ minRows: 5, maxRows: 10 }"
-                        placeholder="请输入产品描述"
-                      ></el-input>
-                    </el-form-item>
-                  </el-col>
-                </el-row>
+                <el-form-item label="购买方式:" prop="purchaseWay">
+                  <el-input v-model="row.purchaseWay" clearable maxlength="50" placeholder="请输入购买方式"></el-input>
+                </el-form-item>
+              </el-col>
+            </el-row>
+            <el-row>
+              <el-col :span="12">
+                <el-form-item label="产品产地:" prop="productOrigin">
+                  <el-input v-model="row.productOrigin" clearable placeholder="请输入产品产地"></el-input>
+                </el-form-item>
+              </el-col>
+              <el-col :span="6">
+                <el-form-item label="热度:" prop="description">
+                  <el-input
+                    v-model="row.popularity"
+                    clearable
+                    onkeyup="this.value=this.value.replace(/[^\d]/g,'')"
+                    maxlength="20"
+                    placeholder="请输入产品热度"
+                  ></el-input>
+                </el-form-item>
+              </el-col>
+              <el-col :span="6">
+                <el-form-item label="状态:" prop="status">
+                  <el-radio v-model="row.status" label="待审核">待审核</el-radio>
+                  <el-radio v-model="row.status" label="审核通过">审核通过</el-radio>
+                </el-form-item>
+              </el-col>
+            </el-row>
+            <el-col :span="12">
+              <el-row>
+                <el-col :span="24">
+                  <el-form-item label="描述:" prop="description">
+                    <el-input
+                      v-model="row.description"
+                      clearable
+                      type="textarea"
+                      :autosize="{ minRows: 5, maxRows: 10 }"
+                      placeholder="请输入产品描述"
+                    ></el-input>
+                  </el-form-item>
+                </el-col>
+              </el-row>
+            </el-col>
+            <el-row>
+              <el-col :span="24" class="register-upload">
+                <el-form-item label="产品图片:">
+                  <el-upload
+                    :action="updateUrl"
+                    :http-request="httpRequest"
+                    :before-upload="beforeAvatarUpload"
+                    :on-preview="handleProductPreview"
+                    :on-remove="handleProductRemove"
+                    :on-change="handleProductChange"
+                    list-type="picture-card"
+                    :file-list="fileProductList"
+                  >
+                    <i class="el-icon-plus"></i>
+                  </el-upload>
+                  <!-- 农产品图片预览 -->
+                  <el-dialog :visible.sync="dialogProductVisible" width="70%" top="5vh" :append-to-body="true">
+                    <img width="100%" :src="imageUrl" alt="" />
+                  </el-dialog>
+
+                  <div class="upload-div">
+                    <div class="upload-div-list" v-for="(item, index) of imgRemoveLists" :key="index">
+                      <div class="upload-div-top">
+                        <span class="upload-div-del" @click="fileDelIdPhoto(index, item.id)">X</span>
+                      </div>
+                      <el-image
+                        class="el-image-preview"
+                        :src="'http://' + item.path"
+                        :preview-src-list="srcList"
+                      ></el-image>
+                    </div>
+                  </div>
+                </el-form-item>
               </el-col>
             </el-row>
           </el-tab-pane>
@@ -336,6 +340,16 @@ export default {
       imageUrl: '',
       // 上传文件
       multfileImg: null,
+      //编辑删除图片id的数组
+      deleteIds: [],
+      // 预览图片src列表
+      srcList: [],
+      dialogProductVisible: false,
+      productRemoveListPhoto: [],
+      //预览的图片数组
+      imgRemoveLists: [],
+      //上传图片文件列表
+      fileProductList: [],
       // 多选框
       productOptions: ['粮油', '蔬菜', '水果', '牛羊猪肉', '家禽蛋类', '水产品', '其他'],
       // 验证规则
@@ -358,6 +372,25 @@ export default {
     };
   },
   methods: {
+    //删除已上传的图片
+    fileDelIdPhoto(index, id) {
+      this.$confirm('此操作将永久删除该图片, 是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      })
+        .then(() => {
+          this.deleteIds.push(id);
+          this.imgRemoveLists.splice(index, 1);
+        })
+        .catch(() => {
+          this.$message({
+            duration: 1000,
+            type: 'info',
+            message: '已取消操作'
+          });
+        });
+    },
     // 获取全部的列表数据
     async getAllList() {
       this.listLoading = true;
@@ -414,16 +447,14 @@ export default {
     },
     // 处理图片
     httpRequest(data) {
-      let _this = this;
       let rd = new FileReader(); // 创建文件读取对象
       let file = data.file;
       rd.readAsDataURL(file); // 文件读取装换为base64类型
       rd.onloadend = function() {
-        _this.imageUrl = this.result; // this指向当前方法onloadend的作用域
+        this.imageUrl = this.result; // this指向当前方法onloadend的作用域
       };
     },
     beforeAvatarUpload(file) {
-      this.multfileImg = file;
       const isJPG = file.type === 'image/jpeg';
       const isPng = file.type === 'image/png';
       if (!isJPG && !isPng) {
@@ -433,7 +464,25 @@ export default {
       // if (!isLt10M) {
       //     this.$message.error('上传头像图片大小不能超过 10MB!');
       // }
+      //
       return isJPG || isPng;
+    },
+    //上传图片列表文件
+    handleProductChange(file, fileList) {
+      this.fileProductList = fileList;
+    },
+    //删除要上传列表中的图片
+    handleProductRemove(file, fileLists) {
+      for (let i in this.productRemoveListPhoto) {
+        if (this.productRemoveListPhoto[i].key === file.uid) {
+          this.productRemoveListPhoto.splice(i, 1);
+        }
+      }
+      this.fileProductList = fileLists;
+    },
+    handleProductPreview(file) {
+      this.imageUrl = file.url;
+      this.dialogProductVisible = true;
     },
     async getDic(item) {
       // console.log(item);
@@ -457,70 +506,78 @@ export default {
     editRow(row) {
       this.flag = 'edit';
       this.row = row;
+      this.imgRemoveLists = row.imgLists;
+      row.imgLists.map(item => {
+        this.srcList.push('http://' + item.path);
+      });
       this.dialogShow = true;
     },
     // 删除
-    deleteRow() {},
+    async deleteRow(id) {
+      let ids = [];
+      ids.push(id);
+      const confirmResult = await this.$confirm('此操作将删除该优质农产品信息,是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).catch(err => err);
+      if (confirmResult !== 'confirm') return this.$message.info('已经取消删除');
+      userService.delHighQualityProductById(ids).then(res => {
+        if (res.status !== 200) return this.$message.error('删除优质农产品信息失败');
+        this.$message.success('删除优质农产品信息成功');
+        this.getAllList();
+      });
+    },
     // 关闭对话框
     closeDialog() {
       this.row = {};
+      this.fileProductList = [];
+      this.imgRemoveLists = [];
+      this.deleteIds = [];
       this.$refs.row.clearValidate();
+      this.getAllList();
     },
     // 提交数据
     submitRow() {
-      if (this.flag === 'add') {
-        this.$refs.row.validate(async valid => {
-          if (!valid) return this.$message.error('信息填写不完整或不准确，请检查再提交！');
-          let formData = new FormData();
-          // formData.append('files',)
-          formData.append('productName', this.row.productName);
-          formData.append('productCategory', this.row.productCategory);
-          formData.append('price', this.row.price);
-          formData.append('description', this.row.description);
-          formData.append('productOrigin', this.row.productOrigin);
-          formData.append('purchaseWay', this.row.purchaseWay);
-          this.row.pubTime = this.$moment(new Date()).format('YYYY-MM-DD HH:mm:ss');
-          formData.append('pubTime', this.row.pubTime);
-          formData.append('status', this.row.status);
-          formData.append('popularity', this.row.popularity);
-          userService
-            .addHighQualityProduct(formData)
-            .then(res => {
-              if (res.status !== 200) return this.$message.error('失败');
-              this.$message.success('新增成功');
-              // 隐藏对话框
-              this.dialogShow = false;
-              // 重新获取文章
-              this.getAllList();
-            })
-            .catch(() => {
-              this.$message({ type: 'error', message: '异常' });
-            });
-        });
-      } else if (this.flag === 'edit') {
+      this.$refs.row.validate(async valid => {
+        if (!valid) return this.$message.error('信息填写不完整或不准确，请检查再提交！');
         let formData = new FormData();
-        // formData.append('files',)
-        formData.append('id', this.row.id);
         formData.append('productName', this.row.productName);
         formData.append('productCategory', this.row.productCategory);
         formData.append('price', this.row.price);
         formData.append('description', this.row.description);
         formData.append('productOrigin', this.row.productOrigin);
-        this.row.pubTime = this.$moment(new Date(this.row.pubTime)).format('YYYY-MM-DD HH:mm:ss');
-        formData.append('pubTime', this.row.pubTime);
         formData.append('purchaseWay', this.row.purchaseWay);
         formData.append('status', this.row.status);
         formData.append('popularity', this.row.popularity);
-        console.log(this.row.pubTime);
-        userService.updateHighQualityProduct(formData).then(res => {
-          if (res.status !== 200) return this.$message.error('失败');
-          this.$message.success('更新成功');
-          // 隐藏对话框
-          this.dialogShow = false;
-          // 重新获取文章
-          this.getAllList();
+        this.fileProductList.forEach(item => {
+          formData.append('files', item.raw);
         });
-      }
+        if (this.flag === 'add') {
+          console.log('新增');
+          userService.addHighQualityProduct(formData).then(res => {
+            if (res.status !== 200) return this.$message.error('失败');
+            this.$message.success('新增成功');
+            this.dialogShow = false;
+            this.getAllList();
+          });
+        } else if (this.flag === 'edit') {
+          this.row.pubTime = this.$moment(this.row.pubTime).format('YYYY-MM-DD HH:mm:ss');
+          formData.append('pubTime', this.row.pubTime);
+          console.log('更新');
+          this.deleteIds.map(item => {
+            console.log(item);
+            formData.append('delIds', item);
+          });
+          formData.append('id', this.row.id);
+          userService.updateHighQualityProduct(formData).then(res => {
+            if (res.status !== 200) return this.$message.error('失败');
+            this.$message.success('更新成功');
+            this.dialogShow = false;
+            this.getAllList();
+          });
+        }
+      });
     }
   }
 };
@@ -557,6 +614,22 @@ export default {
     height: 220px;
     display: block;
   }
+}
+
+.upload-div {
+  width: 350px;
+  display: flex;
+  justify-content: start;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.upload-div-del {
+  cursor: pointer;
+}
+
+.upload-div-del:hover {
+  color: #64b7ff;
 }
 
 .link-type,

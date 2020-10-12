@@ -115,7 +115,7 @@
     <el-dialog
       v-cloak
       title="优质农产品信息"
-      @close="closeDialog()"
+      @close="closeDialog"
       center
       :visible.sync="dialogShow"
       top="7vh"

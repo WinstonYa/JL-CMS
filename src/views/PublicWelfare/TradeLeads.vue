@@ -9,9 +9,11 @@
 
     <el-tabs v-model="activeName" @tab-click="handleClick">
       <!-- 供应信息管理 -->
-      <el-tab-pane label="供应信息管理" name="supply"> </el-tab-pane>
+      <el-tab-pane label="全部供求信息" name="all"></el-tab-pane>
+      <!-- 供应信息管理 -->
+      <el-tab-pane label="供应信息管理" name="supply"></el-tab-pane>
       <!-- 求购信息管理 -->
-      <el-tab-pane label="求购信息管理" name="demand"> </el-tab-pane>
+      <el-tab-pane label="求购信息管理" name="demand"></el-tab-pane>
     </el-tabs>
     <el-card class="article-card">
       <!-- 添加区域 -->
@@ -82,15 +84,15 @@
         <el-table-column type="selection" width="40" label="全选"></el-table-column>
         <el-table-column align="center" label="序号" width="60">
           <template slot-scope="scope">
-            {{ (listQuery.page - 1) * listQuery.limit + scope.$index + 1 }}
+            {{ (listQuery.page - 1) * listQuery.size + scope.$index + 1 }}
           </template>
         </el-table-column>
         <el-table-column align="center" label="标题" min-width="160">
           <template slot-scope="scope">
             <el-tooltip effect="light" :content="scope.row.title" placement="top">
-              <el-link type="primary" :underline="false" @click="editDialogRow(scope.row)">{{
-                scope.row.title
-              }}</el-link>
+              <el-link type="primary" :underline="false" @click="editDialogRow(scope.row)"
+                >{{ scope.row.title }}
+              </el-link>
             </el-tooltip>
           </template>
         </el-table-column>
@@ -109,14 +111,19 @@
             <span>{{ scope.row.area }}</span>
           </template>
         </el-table-column>
+        <el-table-column align="center" label="发布时间" width="160">
+          <template slot-scope="scope">
+            <span>{{ scope.row.pubTime }}</span>
+          </template>
+        </el-table-column>
         <el-table-column align="center" label="描述" min-width="160">
           <template slot-scope="scope">
             <el-popover placement="top-start" title="描述" width="250" trigger="hover">
               <div>{{ scope.row.description }}</div>
               <span
                 slot="reference"
-                v-if="scope.row.hasOwnProperty('description') && JSON.stringify(scope.row.description).length > 20"
-                >{{ scope.row.description.substr(0, 20) }}...
+                v-if="scope.row.hasOwnProperty('description') && JSON.stringify(scope.row.description).length > 15"
+                >{{ scope.row.description.substr(0, 15) }}...
               </span>
               <span v-else slot="reference">
                 {{ scope.row.description }}
@@ -128,30 +135,51 @@
         <el-table-column align="center" label="审核状态" width="120">
           <template slot-scope="scope">
             <el-button
-              v-if="scope.row.status !== '审核通过'"
+              v-if="scope.row.status === '0'"
               type="danger"
               size="mini"
               style="width: 80px"
-              @click="handleModifyStatus(scope.row, '审核通过')"
+              @click="handleModifyStatus(scope.row, '1')"
             >
               待审核
             </el-button>
-
             <el-button
-              v-else
+              v-if="scope.row.status === '1'"
               type="success"
               size="mini"
               style="width: 80px"
-              @click="handleModifyStatus(scope.row, '待审核')"
+              @click="handleModifyStatus(scope.row, '-1')"
             >
               审核通过
+            </el-button>
+            <el-button
+              v-if="scope.row.status === '-1'"
+              type="warning"
+              size="mini"
+              style="width: 90px"
+              @click="handleModifyStatus(scope.row, '0')"
+            >
+              审核未通过
+            </el-button>
+            <el-button
+              v-if="scope.row.status !== '-1' && scope.row.status !== '0' && scope.row.status !== '1'"
+              type="info"
+              size="mini"
+              style="width: 90px"
+              @click="handleModifyStatus(scope.row, '0')"
+            >
+              未知状态
             </el-button>
           </template>
         </el-table-column>
         <el-table-column align="center" label="操作" width="200">
           <template slot-scope="scope">
-            <el-button size="mini" type="primary" icon="el-icon-edit" @click="editDialogRow(scope.row)">编辑</el-button>
-            <el-button size="mini" type="danger" icon="el-icon-delete" @click="deleteRow(scope.row)">删除</el-button>
+            <el-button size="mini" type="primary" icon="el-icon-edit" @click="editDialogRow(scope.row)"
+              >编辑
+            </el-button>
+            <el-button size="mini" type="danger" icon="el-icon-delete" @click="deleteRow(scope.row.id)"
+              >删除
+            </el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -160,7 +188,7 @@
         @size-change="handleSizeChange"
         @current-change="handleCurrentChange"
         :current-page="listQuery.pageNum"
-        :page-sizes="[5, 10, 15, 20]"
+        :page-sizes="[15, 20, 25, 30]"
         :page-size="listQuery.pageRow"
         layout="total, sizes, prev, pager, next, jumper"
         :total="total"
@@ -195,7 +223,7 @@
                       v-for="item in pubTypeOptions"
                       :key="item.display_name"
                       :label="item.display_name"
-                      :value="item.display_name"
+                      :value="item.key"
                     ></el-option>
                   </el-select>
                 </el-form-item>
@@ -222,8 +250,9 @@
               </el-col>
               <el-col :span="12">
                 <el-form-item label="审核状态:" prop="status">
-                  <el-radio v-model="row.status" label="待审核">待审核</el-radio>
-                  <el-radio v-model="row.status" label="审核通过">审核通过</el-radio>
+                  <el-radio v-model="row.status" label="0">待审核</el-radio>
+                  <el-radio v-model="row.status" label="1">审核通过</el-radio>
+                  <el-radio v-model="row.status" label="-1">审核未通过</el-radio>
                 </el-form-item>
               </el-col>
             </el-row>
@@ -299,13 +328,15 @@
 
 <script>
 import userService from '../../globals/service/user';
+
 const stateTypeOptions = [
-  { key: '待审核', display_name: '待审核' },
-  { key: '审核通过', display_name: '审核通过' }
+  { key: '0', display_name: '待审核' },
+  { key: '1', display_name: '审核通过' },
+  { key: '-1', display_name: '审核不通过' }
 ];
 const pubTypeOptions = [
-  { key: '供应信息', display_name: '供应信息' },
-  { key: '求购信息', display_name: '求购信息' }
+  { key: '0', display_name: '供应信息' },
+  { key: '1', display_name: '求购信息' }
 ];
 
 export default {
@@ -315,11 +346,11 @@ export default {
       stateTypeOptions,
       // 供求类型信息
       pubTypeOptions,
-      activeName: '',
+      activeName: 'all',
       // 搜索条件
       listQuery: {
         page: 1,
-        limit: 10,
+        size: 15,
         pubType: '', //供求类型
         title: '', //标题
         contactPerson: '' // 联系人
@@ -342,9 +373,10 @@ export default {
       //编辑删除图片id的数组
       deleteIds: [],
       // 预览图片src列表
-      srcList: ['http://192.168.8.107:8777/UploadFile/gyxImg/2020-09/5c4bb692044f4424a4dae473cfef1126.jpeg'],
+      srcList: [],
       dialogProductVisible: false,
       productRemoveListPhoto: [],
+      //预览的图片数组
       imgRemoveLists: [],
       //上传图片文件列表
       fileProductList: [],
@@ -415,6 +447,8 @@ export default {
         this.listQuery.pubType = '供应信息';
       } else if (this.activeName === 'demand') {
         this.listQuery.pubType = '求购信息';
+      } else if (this.activeName === 'all') {
+        this.listQuery.pubType = '';
       }
       let params = this.listQuery;
       userService.getSupplyDemandListByPage(params).then(res => {
@@ -428,7 +462,7 @@ export default {
     handleImgUrl(data) {
       let imgList = [];
       data.map(item => {
-        imgList.push('http://' + item.path);
+        imgList.push('http://' + item);
       });
       return imgList;
     },
@@ -447,7 +481,11 @@ export default {
       // console.log(data);
     },
     // 修改审核状态
-    handleModifyStatus(row, status) {
+    handleModifyStatus(row, item) {
+      let status;
+      if (item === '-1') status = '审核不通过';
+      if (item === '0') status = '待审核';
+      if (item === '1') status = '审核通过';
       this.$confirm(`是否将审核状态修改为 ${status} ?`, '提示', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
@@ -455,8 +493,8 @@ export default {
       })
         .then(() => {
           // console.log(row, status);
-          row.status = status;
-          userService.updateSupplyDemand(row).then(res => {
+          row.status = item;
+          userService.updateSupplyDemandStatus(row).then(res => {
             if (res.status === 200) {
               this.$message({
                 message: `操作成功，已修改为${status}`,
@@ -473,11 +511,11 @@ export default {
     addRow() {
       this.flag = 'add';
       if (this.activeName === 'supply') {
-        this.row.pubType = '供应信息';
+        this.row.pubType = '0';  // 供应信息
       } else if (this.activeName === 'demand') {
-        this.row.pubType = '求购信息';
+        this.row.pubType = '1';  // 求购信息
       }
-      (this.row.status = '审核通过'), (this.dialogShow = true);
+      (this.row.status = '1'), (this.dialogShow = true);
     },
     // 设定表格高度
     setTableHeight() {
@@ -486,20 +524,17 @@ export default {
     },
     // 编辑
     editDialogRow(row) {
-      this.srcList = [];
       this.flag = 'edit';
-      userService.getSupplyDemand(row.id).then(res => {
-        this.row = res.data;
-        res.data.urlList.forEach(item => {
-          this.srcList.push('http://' + item);
-        });
+      this.row = row;
+      this.imgRemoveLists = row.imgLists;
+      row.imgLists.map(item => {
+        this.srcList.push('http://' + item.path);
       });
-      console.log(this.srcList);
       this.dialogShow = true;
     },
     //获取分页每页显示数据条数
     handleSizeChange(newSize) {
-      this.listQuery.limit = newSize;
+      this.listQuery.size = newSize;
       this.getList();
     },
     //获取当前分页页数
@@ -508,12 +543,28 @@ export default {
       this.getList();
     },
     // 删除
-    deleteRow(row) {
-      console.log(row);
+    async deleteRow(id) {
+      let ids = [];
+      ids.push(id);
+      const confirmResult = await this.$confirm('此操作将删除该供求信息,是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).catch(err => err);
+      if (confirmResult !== 'confirm') return this.$message.info('已经取消删除');
+      userService.delSupplyDemandById(ids).then(res => {
+        if (res.status !== 200) return this.$message.error('删除供求信息失败');
+        this.$message.success('删除供求信息成功');
+        this.getList();
+      });
     },
     DialogClose() {
       this.row = {};
+      this.fileProductList = [];
+      this.imgRemoveLists = [];
+      this.deleteIds = [];
       this.$refs.addFormRef.clearValidate();
+      this.getList();
     },
     // 处理图片
     httpRequest(data) {
@@ -559,6 +610,8 @@ export default {
         });
         if (this.flag === 'add') {
           console.log('新增');
+          console.log('审核状态:', this.row.status);
+          console.log('供求类型:', this.row.pubType);
           userService.addSupplyDemand(formData).then(res => {
             if (res.status !== 200) return this.$message.error('失败');
             this.$message.success('新增成功');
@@ -616,5 +669,43 @@ export default {
     height: 220px;
     display: block;
   }
+}
+
+.upload-div {
+  width: 350px;
+  display: flex;
+  justify-content: start;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.upload-div-del {
+  cursor: pointer;
+}
+
+.upload-div-del:hover {
+  color: #64b7ff;
+}
+
+.link-type,
+.link-type:focus {
+  color: #337ab7;
+  cursor: pointer;
+
+  & :hover {
+    color: rgb(32, 160, 255);
+  }
+}
+
+.products-img-container {
+  height: 100px;
+  padding: 10px;
+  overflow: auto;
+}
+
+.el-image-preview {
+  width: 100px;
+  height: 100px;
+  margin-right: 10px;
 }
 </style>
