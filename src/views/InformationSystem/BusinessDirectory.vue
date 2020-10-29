@@ -11,8 +11,8 @@
     <el-card>
       <!-- 添加区域 -->
       <div>
+        <el-button type="danger" size="small" icon="el-icon-delete" @click="handleBatchRemove()">批量删除</el-button>
         <el-button type="primary" size="small" icon="el-icon-circle-plus" @click="addCompanyInfo">添加</el-button>
-
         <el-select
           allow-create
           filterable
@@ -40,7 +40,9 @@
         highlight-current-row
         :row-style="{ height: '5px' }"
         :cell-style="{ padding: '5px 0' }"
+        @selection-change="checkSelect"
       >
+        <el-table-column type="selection" width="40" label="全选"></el-table-column>
         <el-table-column align="center" label="序号" width="60">
           <template slot-scope="scope">
             {{ (listQuery.page - 1) * listQuery.size + scope.$index + 1 }}
@@ -58,17 +60,17 @@
             {{ scope.row.companyType }}
           </template>
         </el-table-column>
-        <el-table-column align="center" label="企业法人" width="160">
-          <template slot-scope="scope">
-            {{ scope.row.chargeMan }}
-          </template>
-        </el-table-column>
-        <el-table-column align="center" label="联系电话" width="160">
-          <template slot-scope="scope">
-            {{ scope.row.phone }}
-          </template>
-        </el-table-column>
-        <el-table-column align="center" label="注册资金" width="160">
+        <!--        <el-table-column align="center" label="企业法人" width="120">-->
+        <!--          <template slot-scope="scope">-->
+        <!--            {{ scope.row.chargeMan }}-->
+        <!--          </template>-->
+        <!--        </el-table-column>-->
+        <!--        <el-table-column align="center" label="联系电话" width="160">-->
+        <!--          <template slot-scope="scope">-->
+        <!--            {{ scope.row.phone }}-->
+        <!--          </template>-->
+        <!--        </el-table-column>-->
+        <el-table-column align="center" label="注册资金" width="120">
           <template slot-scope="scope">
             {{ scope.row.registMoney }}
           </template>
@@ -78,14 +80,24 @@
             {{ scope.row.businessCode }}
           </template>
         </el-table-column>
-        <el-table-column align="center" label="行业" width="160">
+        <el-table-column align="center" label="行业" width="150">
           <template slot-scope="scope">
             {{ scope.row.industry }}
           </template>
         </el-table-column>
-        <el-table-column align="center" label="介绍" width="160">
+        <el-table-column align="center" label="介绍" min-width="160">
           <template slot-scope="scope">
-            {{ scope.row.introduction }}
+            <el-popover placement="top-start" title="企业介绍" width="250" trigger="hover">
+              <div>{{ scope.row.introduction }}</div>
+              <span
+                slot="reference"
+                v-if="scope.row.hasOwnProperty('introduction') && JSON.stringify(scope.row.introduction).length > 20"
+                >{{ scope.row.introduction.substr(0, 50) }}...
+              </span>
+              <span v-else slot="reference">
+                {{ scope.row.introduction }}
+              </span>
+            </el-popover>
           </template>
         </el-table-column>
         <el-table-column align="center" label="企业所在地" width="160">
@@ -95,7 +107,7 @@
         </el-table-column>
         <el-table-column align="center" label="操作" width="200">
           <template slot-scope="scope">
-            <el-button type="success" size="mini" icon="el-icon-edit" @click="editCompanyInfo(scope.row)"
+            <el-button type="primary" size="mini" icon="el-icon-edit" @click="editCompanyInfo(scope.row)"
               >编辑
             </el-button>
             <el-button type="danger" size="mini" icon="el-icon-delete" @click="deleteCompanyInfo(scope.row.id)"
@@ -271,11 +283,13 @@ export default {
       //公司名称
       companyName: '',
       //查询企业选择框db
-      companyNameOptions: ['baidu', 'alibaba', 'tencent'],
+      companyNameOptions: [],
       //企业类型选择框
-      companyTypeOptions: ['good', 'just so so'],
+      companyTypeOptions: [],
       // 表单高度
       curHeight: 0,
+      //删除ids数组
+      ids: [],
       //列表加载圈圈
       listLoading: false,
       //列表渲染db
@@ -369,6 +383,27 @@ export default {
         this.srcList.push('http://' + item.path);
       });
       this.dialogShow = true;
+    },
+    //全选框事件
+    checkSelect(data) {
+      console.log(data);
+      data.forEach(item => {
+        this.ids.push(item.id);
+      });
+    },
+    async handleBatchRemove() {
+      if (this.ids.length === 0) return this.$message.warning('请先选中要删除的企业信息');
+      const confirmResult = await this.$confirm('此操作将删除选中企业信息,是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).catch(err => err);
+      if (confirmResult !== 'confirm') return this.$message.info('已经取消删除');
+      userService.businessDirectoryDel(this.ids).then(res => {
+        if (res.status !== 200) return this.$message.error('删除企业信息失败');
+        this.$message.success('删除企业信息成功');
+        this.getAllList();
+      });
     },
     //删除企业信息
     async deleteCompanyInfo(id) {

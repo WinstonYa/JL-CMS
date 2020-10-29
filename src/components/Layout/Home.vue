@@ -114,6 +114,12 @@ export default {
               systemItem: '轮播图管理',
               path: 'commerce-admin-swiper',
               icon: 'iconfont icon-lunbotu'
+            },
+            {
+              id: 8,
+              systemItem: '基础数据管理',
+              path: 'data-dictionary',
+              icon: 'iconfont icon-tesezhuanti'
             }
           ]
         },
@@ -156,6 +162,12 @@ export default {
               id: 6,
               systemItem: '轮播图管理',
               path: 'public-welfare-swiper',
+              icon: 'iconfont icon-lunbotu'
+            },
+            {
+              id: 7,
+              systemItem: '用户管理',
+              path: 'user-management',
               icon: 'iconfont icon-lunbotu'
             }
           ]

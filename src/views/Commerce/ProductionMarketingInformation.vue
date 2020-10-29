@@ -10,7 +10,46 @@
     <el-card>
       <!-- 添加区域 -->
       <div>
+        <el-button type="danger" size="small" icon="el-icon-delete" @click="handleBatchRemove()">批量删除</el-button>
         <el-button type="primary" size="small" icon="el-icon-circle-plus" @click="addRow">添加产销信息 </el-button>
+        <el-input
+          v-model="listQuery.title"
+          size="small"
+          style="width: 120px;margin-left: 10px"
+          clearable
+          placeholder="标题"
+        ></el-input>
+        <!--        产品分类-->
+        <el-select
+          v-model="listQuery.productCategory"
+          size="small"
+          placeholder="产品分类"
+          clearable
+          class="filter-item"
+          style="width: 130px;margin-left: 10px"
+        >
+          <el-option v-for="item in productOptions" :key="item" :label="item" :value="item" />
+        </el-select>
+        <el-select
+          v-model="listQuery.status"
+          size="small"
+          placeholder="发布状态"
+          clearable
+          class="filter-item"
+          style="width: 130px;margin-left: 10px"
+        >
+          <el-option v-for="item in statusOptions" :key="item.key" :label="item.display_name" :value="item.key" />
+        </el-select>
+        <el-button
+          class="filter-item"
+          size="small"
+          type="primary"
+          style=";margin-left: 0.5rem"
+          icon="el-icon-search"
+          @click="handleFilter"
+        >
+          查询
+        </el-button>
       </div>
       <!-- 表格显示区域 -->
       <el-table
@@ -22,7 +61,9 @@
         :row-style="{ height: '5px' }"
         :cell-style="{ padding: '5px 0' }"
         :height="curHeight"
+        @selection-change="checkSelect"
       >
+        <el-table-column type="selection" width="40" label="全选"></el-table-column>
         <el-table-column align="center" label="序号" width="60">
           <template slot-scope="scope">
             {{ (listQuery.page - 1) * listQuery.limit + scope.$index + 1 }}
@@ -82,7 +123,7 @@
         </el-table-column>
         <el-table-column align="center" label="操作" width="200">
           <template slot-scope="scope">
-            <el-button size="mini" type="success" icon="el-icon-edit" @click="editRow(scope.row)">编辑 </el-button>
+            <el-button size="mini" type="primary" icon="el-icon-edit" @click="editRow(scope.row)">编辑 </el-button>
             <el-button size="mini" type="danger" icon="el-icon-delete" @click="deleteRow(scope.row)">删除 </el-button>
           </template>
         </el-table-column>
@@ -193,21 +234,30 @@
 
 <script>
 import userService from '../../globals/service/user';
-
+const statusOptions = [
+  { key: '待发布', display_name: '待发布' },
+  { key: '已发布', display_name: '已发布' }
+];
 export default {
   data() {
     return {
+      statusOptions,
       //提交状态,是提交还是编辑
       flag: 'add',
       // 搜索条件
       listQuery: {
         page: 1,
         limit: 10,
-        type: '产销信息'
+        type: '产销信息',
+        title: '',
+        productCategory: '',
+        status: ''
       },
       total: 0,
       // 表单高度
       curHeight: 0,
+      //删除ids数组
+      ids: [],
       // 对话框
       dialogShow: false,
       // 表单
@@ -220,7 +270,10 @@ export default {
         reading: 0, // 阅读量
         status: '已发布', // 状态
         type: '产销信息', //类型（产销信息或者市场行情）
-        content: '' // 内容
+        content: '', // 内容
+        author: '',
+        source: '',
+        pubTime: ''
       },
       // 多选框
       productOptions: ['粮油', '蔬菜', '水果', '牛羊猪肉', '家禽蛋类', '水产品', '其他'],
@@ -271,7 +324,7 @@ export default {
   },
   methods: {
     // 获取全部的列表数据
-    async getAllList() {
+    getAllList() {
       this.row.type = '产销信息';
       let params = this.listQuery;
       this.listLoading = true;
@@ -282,21 +335,34 @@ export default {
         this.total = res.data.total;
       });
     },
-    // 富文本编辑器
-    // 失去焦点
-    // onEditorBlur(editor) {
-    // },
-    // 获得焦点
-    // onEditorFocus(editor) {
-    // },
-    // 开始
-    // onEditorReady(editor) {
-    // },
-    // 值发生变化
-    // onEditorChange(editor) {
-    //   this.row.content = editor.html;
-    //   console.log(editor);
-    // },
+    // 查询
+    handleFilter() {
+      this.listQuery.page = 1;
+      this.getAllList();
+    },
+    //全选框事件
+    checkSelect(data) {
+      console.log(data);
+      data.forEach(item => {
+        this.ids.push(item.id);
+      });
+    },
+    async handleBatchRemove() {
+      if (this.ids.length === 0) return this.$message.warning('请先选中要删除的产销信息');
+      const confirmResult = await this.$confirm('此操作将删除选中产销信息,是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).catch(err => err);
+      if (confirmResult !== 'confirm') return this.$message.info('已经取消删除');
+      this.ids.forEach(id => {
+        userService.delMarketingInfoById(id).then(res => {
+          if (res.status !== 200) return this.$message.error('删除失败');
+          this.getAllList();
+        });
+      });
+    },
+
     // 每页多少条
     handleSizeChange(val) {
       this.listQuery.limit = val;
@@ -340,7 +406,7 @@ export default {
       this.row.reading = 0;
       this.row.status = '已发布';
       this.row.type = '产销信息';
-      console.log(this.row);
+      this.row.productCategory = this.productOptions[0];
       this.dialogShow = true;
     },
     // 编辑
@@ -351,7 +417,7 @@ export default {
     },
     // 删除
     deleteRow(row) {
-      console.log(row);
+      // console.log(row);
       // 弹出删除确认框
       this.$confirm('此操作将删除一条产销信息, 是否继续?', '提示', {
         confirmButtonText: '确定',
@@ -373,52 +439,53 @@ export default {
     },
     // 提交数据
     submitRow() {
-      if (this.flag === 'add') {
-        this.$refs.row.validate(async valid => {
-          if (!valid) return this.$message.error('信息填写不完整或不准确，请检查再提交！');
-          this.row.pubTime = this.$moment(new Date(this.row.pubTime)).format('YYYY-MM-DD HH:mm:ss');
-          console.log(this.row.pubTime);
+      this.$refs.row.validate(async valid => {
+        if (!valid) return this.$message.error('信息填写不完整或不准确，请检查再提交！');
+        console.log('表单：', this.row);
+        this.row.pubTime = this.$moment(new Date(this.row.pubTime)).format('YYYY-MM-DD HH:mm:ss');
+        console.log('发布时间：', this.row.pubTime);
+        if (this.flag === 'add') {
           userService.addMarketingInfo(this.row).then(res => {
             if (res.status !== 200) return this.$message.error('失败');
             this.$message.success('新增一条产销信息成功');
+            // 隐藏新增的对话框
+            this.dialogShow = false;
+            // 重新获取列表
+            this.getAllList();
           });
-          // 隐藏新增的对话框
-          this.dialogShow = false;
-          // 重新获取列表
-          this.getAllList();
-        });
-      } else if (this.flag === 'edit') {
-        console.log(this.row);
-        this.editMarketingSubmit();
-      }
+        } else if (this.flag === 'edit') {
+          // console.log(this.row);
+          this.editMarketingSubmit();
+        }
+      });
     },
     //编辑的提交
-    async editMarketingSubmit() {
+    editMarketingSubmit() {
       this.listLoading = true;
       userService.updateMarketingInfo(this.row).then(res => {
         if (res.status !== 200) return this.$message.error('更新失败');
         this.listLoading = false;
+        // 关闭对话框
+        this.dialogShow = false;
+        // 刷新数据列表
+        this.getAllList();
+        // 提醒更新成功
+        this.$message.success('更新成功');
       });
-      // 关闭对话框
-      this.dialogShow = false;
-      // 刷新数据列表
-      this.getAllList();
-      // 提醒更新成功
-      this.$message.success('更新成功');
     },
     // 删除
-    async delMarketingInfo(id) {
+    delMarketingInfo(id) {
       this.listLoading = true;
       userService.delMarketingInfoById(id).then(res => {
         if (res.status !== 200) return this.$message.error('删除失败');
         this.listLoading = false;
+        // 关闭对话框
+        this.dialogShow = false;
+        // 刷新数据列表
+        this.getAllList();
+        // 提醒删除成功
+        this.$message.success('删除成功');
       });
-      // 关闭对话框
-      this.dialogShow = false;
-      // 刷新数据列表
-      this.getAllList();
-      // 提醒删除成功
-      this.$message.success('删除成功');
     }
   }
 };

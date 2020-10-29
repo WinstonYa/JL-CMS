@@ -55,10 +55,10 @@
         </el-table-column>
         <el-table-column align="center" label="主题" width="200">
           <template slot-scope="scope">
-            {{ scope.row.theme }}
+            <el-link type="primary" :underline="false">{{ scope.row.theme }}</el-link>
           </template>
         </el-table-column>
-        <el-table-column align="center" label="内容" width="180">
+        <el-table-column align="center" label="内容" min-width="180">
           <template slot-scope="scope">
             <el-popover placement="top-start" width="250" trigger="hover">
               <div>{{ scope.row.content }}</div>
@@ -109,6 +109,13 @@
             {{ scope.row.updName }}
           </template>
         </el-table-column>
+        <!--        <el-table-column align="center" label="操作" width="120">-->
+        <!--          <template slot-scope="scope">-->
+        <!--            <el-button type="danger" size="mini" icon="el-icon-delete" @click="deleteInfo(scope.row.id)"-->
+        <!--            >删除-->
+        <!--            </el-button>-->
+        <!--          </template>-->
+        <!--        </el-table-column>-->
       </el-table>
       <!-- 分页 -->
       <el-pagination
@@ -211,6 +218,22 @@ export default {
         this.getAllList();
       });
     },
+    //删除投诉建议信息
+    async deleteInfo(id) {
+      let ids = [];
+      ids.push(id);
+      const confirmResult = await this.$confirm('此操作将删除该企业信息,是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).catch(err => err);
+      if (confirmResult !== 'confirm') return this.$message.info('已经取消删除');
+      userService.businessDirectoryDel(ids).then(res => {
+        if (res.status !== 200) return this.$message.error('删除企业信息失败');
+        this.$message.success('删除企业信息成功');
+        this.getAllList();
+      });
+    },
     // 每页多少条
     handleSizeChange(size) {
       this.listQuery.limit = size;
@@ -219,7 +242,7 @@ export default {
     // 设定表格高度
     setTableHeight() {
       let h = document.documentElement.clientHeight || document.body.clientHeight;
-      this.curHeight = h - 280;
+      this.curHeight = h - 310;
     }
   }
 };

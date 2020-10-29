@@ -1,15 +1,27 @@
+// const PREFIX_API_1 = 'http://39.104.61.47:8776'; // 电子商务系统
+// const PREFIX_API_2 = 'http://39.104.61.47:8766'; //信息追溯系统
+// const PREFIX_API_3 = 'http://39.104.61.47:8777'; //公益性子系统
+
 const PREFIX_API_1 = 'http://192.168.8.166:8776'; // 电子商务系统
 const PREFIX_API_2 = 'http://192.168.8.166:8766'; //信息追溯系统
-// const PREFIX_API_2 = 'http://192.168.8.133:8766'; //信息追溯系统 ws
-// const PREFIX_API_3 = 'http://192.168.8.133:8777'; //公益性子系统
-// const PREFIX_API_3 = 'http://192.168.8.124:8777'; //公益性子系统 cj
-const PREFIX_API_3 = 'http://192.168.8.124:8777'; //公益性子系统 ws
+const PREFIX_API_3 = 'http://192.168.8.166:8777'; //公益性子系统
+
+// const PREFIX_API_11 = 'http://192.168.8.124:8776'; // 电子商务系统
+// const PREFIX_API_22 = 'http://192.168.8.124:8766'; //信息追溯系统
 
 export default {
   // 用户登录
   login: `${PREFIX_API_1}/user/login`,
   // 获取当前用户信息
   getUserInfo: `${PREFIX_API_1}/user/getCurrentUser`,
+  // 分页获取所有用户信息
+  getAllUserInfo: `${PREFIX_API_1}/user/list`,
+  //重置用户密码
+  resetPwd: `${PREFIX_API_1}/user/resetPWD`,
+  // 删除用户
+  delUserInfo: id => `${PREFIX_API_1}/user/delete/${id}`,
+  // 更新用户信息
+  updateUserInfo: `${PREFIX_API_1}/user/update`,
   //追溯信息系统
   //文章管理获取文章列表
   articleList: `${PREFIX_API_2}/article/list`,
@@ -30,6 +42,14 @@ export default {
   featureProductDel: id => `${PREFIX_API_2}/product/del?ids=${id}`,
   //修改特色农产品
   featureProductEdit: `${PREFIX_API_2}/product/update`,
+  // 新增三品一标
+  authInfoAdd: `${PREFIX_API_2}/productAuth/add`,
+  // 修改三品一标
+  authInfoEdit: `${PREFIX_API_2}/productAuth/update`,
+  // 删除三品一标
+  authInfoDel: id => `${PREFIX_API_2}/productAuth/del/?id=${id}`,
+  // 根据id获取一条三品一标详细信息
+  authInfoById: id => `${PREFIX_API_2}/productAuth/getByAuthId?AuthId=${id}`,
   //获取企业名录列表
   getCompanylist: `${PREFIX_API_2}/company/allByPage`,
   //新增企业名录
@@ -70,14 +90,25 @@ export default {
   replyQAById: `${PREFIX_API_1}/reply/replyQAById`,
   // 更新一条回复消息
   updateReplyQAInfo: `${PREFIX_API_1}/reply`,
+  // 删除一条留言
+  delQAById: `${PREFIX_API_1}/qa`,
   // 分页获取市场行情列表
   getMarketingListByPage: `${PREFIX_API_1}/marketing/listByPage`,
   // 更新市场行情信息
+  updateInfoById: `${PREFIX_API_1}/marketing/updateInfoById`,
   MarketingInfo: `${PREFIX_API_1}/marketing`,
   // 根据Type类型获取农产品名称
-  getProductNameDicByType: `${PREFIX_API_1}/dic/getDicByType`,
+  getProductNameDicByType: `${PREFIX_API_1}/dic/getDicByTypeAndText`,
+  // 新增数据字典
+  addDicInfo: `${PREFIX_API_1}/dic/addDic`,
+  // 更新数据字典
+  updateDicInfo: `${PREFIX_API_1}/dic/updateDic`,
+  // 删除数据字典
+  delDicInfo: `${PREFIX_API_1}/dic/delDic`,
   // 分页获取价格行情列表
   getPriceInfoListByPage: `${PREFIX_API_1}/price/listByPage`,
+  // 通过Excel导入价格行情信息
+  importByExcel: `${PREFIX_API_1}/price/importByExcel`,
   // 价格行情
   priceInfo: `${PREFIX_API_1}/price`,
   // 分页获取供求信息

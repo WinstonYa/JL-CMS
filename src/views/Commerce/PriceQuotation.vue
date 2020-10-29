@@ -10,8 +10,51 @@
     <el-card>
       <!-- 添加区域 -->
       <div>
+        <el-button type="danger" size="small" icon="el-icon-delete" @click="handleBatchRemove()">批量删除 </el-button>
         <el-button type="primary" size="small" icon="el-icon-circle-plus" @click="addRow">录入价格</el-button>
         <el-button type="primary" size="small" icon="el-icon-circle-plus" @click="importByExcel">Excel导入 </el-button>
+        <el-date-picker
+          style="margin-left: 10px;width: 450px"
+          v-model="timeRange"
+          type="daterange"
+          size="small"
+          align="right"
+          unlink-panels
+          range-separator="至"
+          start-placeholder="开始日期"
+          end-placeholder="结束日期"
+          :picker-options="pickerOptions"
+        >
+        </el-date-picker>
+
+        <!--        <el-date-picker-->
+        <!--          v-model="listQuery.startTime"-->
+        <!--          type="date"-->
+        <!--          style="width: 200px;margin-left: 10px"-->
+        <!--          placeholder="选择起始时间"-->
+        <!--          value-format="yyyy-MM-dd"-->
+        <!--          format="yyyy-MM-dd"-->
+        <!--        >-->
+        <!--        </el-date-picker>-->
+        <!--        <el-date-picker-->
+        <!--          v-model="listQuery.endTime"-->
+        <!--          type="date"-->
+        <!--          style="width: 200px;margin-left: 10px"-->
+        <!--          placeholder="选择结束时间"-->
+        <!--          value-format="yyyy-MM-dd"-->
+        <!--          format="yyyy-MM-dd"-->
+        <!--        >-->
+        <!--        </el-date-picker>-->
+        <el-button
+          class="filter-item"
+          size="small"
+          type="primary"
+          style="margin-left: 10px"
+          icon="el-icon-search"
+          @click="handleFilter"
+        >
+          查询
+        </el-button>
       </div>
       <!-- 表格显示区域 -->
       <el-table
@@ -23,7 +66,9 @@
         :row-style="{ height: '5px' }"
         :cell-style="{ padding: '5px 0' }"
         :height="curHeight"
+        @selection-change="checkSelect"
       >
+        <el-table-column type="selection" width="40" label="全选"></el-table-column>
         <el-table-column align="center" label="序号" width="60">
           <template slot-scope="scope">
             {{ (listQuery.page - 1) * listQuery.limit + scope.$index + 1 }}
@@ -32,9 +77,9 @@
         <el-table-column align="center" label="产品名称" min-width="160">
           <template slot-scope="scope">
             <el-tooltip effect="light" :content="scope.row.productName" placement="top">
-              <el-link type="primary" :underline="false" @click="editRow(scope.row)">{{
-                scope.row.productName
-              }}</el-link>
+              <el-link type="primary" :underline="false" @click="editRow(scope.row)"
+                >{{ scope.row.productName }}
+              </el-link>
             </el-tooltip>
           </template>
         </el-table-column>
@@ -78,7 +123,7 @@
         </el-table-column>
         <el-table-column align="center" label="操作" width="200">
           <template slot-scope="scope">
-            <el-button type="info" size="mini" icon="el-icon-edit" @click="editRow(scope.row)">编辑 </el-button>
+            <el-button type="primary" size="mini" icon="el-icon-edit" @click="editRow(scope.row)">编辑 </el-button>
             <el-button type="danger" size="mini" icon="el-icon-delete" @click="deleteRow(scope.row)">删除 </el-button>
           </template>
         </el-table-column>
@@ -88,7 +133,7 @@
         @size-change="handleSizeChange"
         @current-change="handleCurrentChange"
         :current-page="listQuery.page"
-        :page-sizes="[10, 20, 30, 40]"
+        :page-sizes="[15, 20, 30, 40]"
         :page-size="listQuery.limit"
         layout="total, sizes, prev, pager, next, jumper"
         :total="total"
@@ -115,7 +160,6 @@
                   <!-- <el-input v-model="row.productCategory" clearable maxlength="50" placeholder="请输入产品分类"></el-input> -->
                   <el-select
                     v-model="form.productCategory"
-                    clearable
                     style="width: 100%"
                     placeholder="请选择产品分类"
                     @change="getDic"
@@ -125,10 +169,11 @@
                 </el-form-item>
               </el-col>
               <el-col :span="12">
-                <el-form-item label="产品名称:">
+                <el-form-item label="产品名称:" prop="productName">
                   <el-select
                     v-model="form.productName"
                     filterable
+                    allow-create
                     style="width: 100%"
                     placeholder="请输入产品名称关键词"
                   >
@@ -138,15 +183,20 @@
                 </el-form-item>
               </el-col>
             </el-row>
-
             <el-row>
               <el-col :span="12">
-                <el-form-item label="产品报价:" prop="source">
-                  <el-input v-model="form.price" clearable maxlength="20" placeholder="请输入产品报价"></el-input>
+                <el-form-item label="产品报价:" prop="price">
+                  <el-input
+                    v-model="form.price"
+                    onkeyup="this.value=this.value.replace(/[^\d\.]/ig,'')"
+                    clearable
+                    maxlength="20"
+                    placeholder="请输入产品报价"
+                  ></el-input>
                 </el-form-item>
               </el-col>
               <el-col :span="12">
-                <el-form-item label="发布时间:" prop="pubTime">
+                <el-form-item label="报价时间:" prop="offerTime">
                   <el-date-picker
                     v-model="form.offerTime"
                     type="datetime"
@@ -157,10 +207,9 @@
                 </el-form-item>
               </el-col>
             </el-row>
-
             <el-row>
               <el-col :span="12">
-                <el-form-item label="采价地点:" prop="pubTime">
+                <el-form-item label="采价地点:" prop="collectionPoint">
                   <el-input
                     v-model="form.collectionPoint"
                     clearable
@@ -170,20 +219,32 @@
                 </el-form-item>
               </el-col>
               <el-col :span="12">
-                <el-form-item label="报价员:" prop="pubTime">
+                <el-form-item label="报价员:" prop="pricingOffer">
                   <el-input v-model="form.pricingOffer" clearable maxlength="20" placeholder="请输入报价员"></el-input>
                 </el-form-item>
               </el-col>
             </el-row>
             <el-row>
               <el-col :span="12">
-                <el-form-item label="最高价:" prop="pubTime">
-                  <el-input v-model="form.highestPrice" clearable maxlength="20" placeholder="请输入最高价"></el-input>
+                <el-form-item label="最高价:" prop="highestPrice">
+                  <el-input
+                    v-model="form.highestPrice"
+                    onkeyup="this.value=this.value.replace(/[^\d\.]/ig,'')"
+                    clearable
+                    maxlength="20"
+                    placeholder="请输入最高价"
+                  ></el-input>
                 </el-form-item>
               </el-col>
               <el-col :span="12">
-                <el-form-item label="最低价:" prop="pubTime">
-                  <el-input v-model="form.lowestPrice" clearable maxlength="20" placeholder="请输入最低价"></el-input>
+                <el-form-item label="最低价:" prop="lowestPrice">
+                  <el-input
+                    v-model="form.lowestPrice"
+                    onkeyup="this.value=this.value.replace(/[^\d\.]/ig,'')"
+                    clearable
+                    maxlength="20"
+                    placeholder="请输入最低价"
+                  ></el-input>
                 </el-form-item>
               </el-col>
             </el-row>
@@ -195,12 +256,25 @@
         </span>
       </el-form>
     </el-dialog>
-    <!--  删除提示框-->
-    <el-dialog title="提示" :visible.sync="dialogVisible" width="30%">
-      <span>这是一段信息</span>
+    <!--  导入提示框-->
+    <el-dialog title="导入价格行情信息" :visible.sync="dialogVisible" width="30%">
+      <el-upload
+        class="upload-demo"
+        ref="upload"
+        action="#"
+        :on-preview="handlePreview"
+        :on-remove="handleRemove"
+        :on-change="handleProductChange"
+        :file-list="fileList"
+        :limit="1"
+        :auto-upload="false"
+      >
+        <el-button slot="trigger" size="small" type="primary">选取文件</el-button>
+        <div slot="tip" class="el-upload__tip">只能上传xlsx/xls文件.</div>
+      </el-upload>
       <span slot="footer" class="dialog-footer">
         <el-button @click="dialogVisible = false">取 消</el-button>
-        <el-button type="primary" @click="dialogVisible = false">确 定</el-button>
+        <el-button type="primary" @click="submitUpload">上 传</el-button>
       </span>
     </el-dialog>
   </div>
@@ -212,6 +286,38 @@ import userService from '../../globals/service/user';
 export default {
   data() {
     return {
+      timeRange: '',
+      pickerOptions: {
+        shortcuts: [
+          {
+            text: '最近一周',
+            onClick(picker) {
+              const end = new Date();
+              const start = new Date();
+              start.setTime(start.getTime() - 3600 * 1000 * 24 * 7);
+              picker.$emit('pick', [start, end]);
+            }
+          },
+          {
+            text: '最近一个月',
+            onClick(picker) {
+              const end = new Date();
+              const start = new Date();
+              start.setTime(start.getTime() - 3600 * 1000 * 24 * 30);
+              picker.$emit('pick', [start, end]);
+            }
+          },
+          {
+            text: '最近三个月',
+            onClick(picker) {
+              const end = new Date();
+              const start = new Date();
+              start.setTime(start.getTime() - 3600 * 1000 * 24 * 90);
+              picker.$emit('pick', [start, end]);
+            }
+          }
+        ]
+      },
       productList: [],
       options: [],
       //提交状态,是提交还是编辑
@@ -219,17 +325,22 @@ export default {
       // 搜索条件
       listQuery: {
         page: 1,
-        limit: 10
+        limit: 15,
+        startTime: '',
+        endTime: ''
       },
       total: 0,
       // 表单高度
       curHeight: 0,
+      //删除ids数组
+      ids: [],
       // 对话框
       dialogShow: false,
       // 删除提示框
       dialogVisible: false,
       //loading
       listLoading: false,
+      fileList: [],
       // 表单
       form: {
         id: '',
@@ -247,13 +358,12 @@ export default {
       priceList: [], // 价格行情列表
       // 验证规则
       rules: {
-        // title: [{ required: true, message: '请输入文章标题', trigger: 'blur' }],
-        // content: [{ required: true, message: '请输入文章内容', trigger: 'blur' }],
-        // productCategory: [{ required: true, message: '请选择产品分类', trigger: 'blur' }],
-        // source: [{ required: true, message: '请输入文章来源', trigger: 'blur' }],
-        // pubTime: [{ required: true, message: '请选择发布时间', trigger: 'blur' }],
-        // author: [{ required: true, message: '请输入作者', trigger: 'blur' }],
-        // status: [{ required: true, message: '请输入状态', trigger: 'blur' }]
+        productCategory: [{ required: true, message: '请选择产品分类', trigger: 'blur' }],
+        productName: [{ required: true, message: '请输入农产品名称', trigger: 'blur' }],
+        price: [{ required: true, message: '请选择产品报价', trigger: 'blur' }],
+        offerTime: [{ required: true, message: '请选择报价时间', trigger: 'blur' }],
+        collectionPoint: [{ required: true, message: '请输入采价地点', trigger: 'blur' }],
+        pricingOffer: [{ required: true, message: '请输入报价员', trigger: 'blur' }]
       }
     };
   },
@@ -265,6 +375,29 @@ export default {
     };
   },
   methods: {
+    submitUpload() {
+      let formData = new FormData();
+      console.log(this.fileList);
+      this.fileList.forEach(item => {
+        formData.append('file', item.raw);
+      });
+      userService.importByExcel(formData).then(res => {
+        if (res.status === 200) {
+          this.$message.success('数据导入成功');
+        }
+        this.getAllList();
+        this.dialogVisible = false;
+      });
+    },
+    handleProductChange(file, fileList) {
+      this.fileList = fileList;
+    },
+    handleRemove(file, fileList) {
+      console.log(file, fileList);
+    },
+    handlePreview(file) {
+      console.log(file);
+    },
     // 获取全部的列表数据
     async getAllList() {
       let params = this.listQuery;
@@ -285,15 +418,52 @@ export default {
       this.listQuery.page = val;
       this.getAllList();
     },
+    // 查询
+    handleFilter() {
+      console.log(this.timeRange);
+      if (this.timeRange !== '' && this.timeRange !== null) {
+        this.listQuery.startTime = this.$moment(new Date(this.timeRange[0])).format('YYYY-MM-DD HH:mm:ss');
+        this.listQuery.endTime = this.$moment(new Date(this.timeRange[1])).format('YYYY-MM-DD HH:mm:ss');
+      }
+      if (this.timeRange === null) {
+        this.listQuery.startTime = '';
+        this.listQuery.endTime = '';
+      }
+      console.log(this.listQuery);
+      this.listQuery.page = 1;
+      this.getAllList();
+    },
+    //全选框事件
+    checkSelect(data) {
+      console.log(data);
+      data.forEach(item => {
+        this.ids.push(item.id);
+      });
+    },
+    async handleBatchRemove() {
+      if (this.ids.length === 0) return this.$message.warning('请先选中要删除的价格信息');
+      const confirmResult = await this.$confirm('此操作将删除选中价格信息,是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).catch(err => err);
+      if (confirmResult !== 'confirm') return this.$message.info('已经取消删除');
+      this.ids.forEach(id => {
+        userService.delPriceInfoById(id).then(res => {
+          if (res.status !== 200) return this.$message.error('删除失败');
+        });
+      });
+    },
     // 设定表格高度
     setTableHeight() {
       let h = document.documentElement.clientHeight || document.body.clientHeight;
       this.curHeight = h - 280;
     },
-    async getDic(item) {
-      console.log(item);
-      // const { data: res } = await this.$http.post(`/dic/getDicByType?type=${item}`);
-      userService.getProductNameDicByType(item).then(res => {
+    getDic() {
+      let params = {
+        type: this.form.productCategory
+      };
+      userService.getProductNameDicByType(params).then(res => {
         if (res.status !== 200) return this.$message.error('获取失败');
         // this.$refs.row.resetFields();
         this.productList = res.data.rows;
@@ -302,18 +472,21 @@ export default {
           return { value: `${item.text}`, label: `${item.text}` };
         });
         console.log(this.options);
-        // this.form.productName = this.options[0].value;
+        this.form.productName = this.options[0].value;
       });
     },
     // 新增
     addRow() {
       this.flag = 'add';
-      this.form = {};
+      this.form.offerTime = this.$moment(new Date()).format('YYYY-MM-DD HH:mm:ss');
+      this.form.productCategory = this.productOptions[0];
+      this.getDic();
       this.dialogShow = true;
     },
     //Excel 导入
     importByExcel() {
       console.log('从excel导入价格行情');
+      this.dialogVisible = true;
     },
     // 编辑
     editRow(row) {
@@ -357,11 +530,11 @@ export default {
           userService.addPriceInfo(this.form).then(res => {
             if (res.status !== 200) return this.$message.error('失败');
             this.$message.success('新增一条价格行情成功');
+            // 隐藏添加价格行情的对话框
+            this.dialogShow = false;
+            // 重新获取价格行情列表
+            this.getAllList();
           });
-          // 隐藏添加价格行情的对话框
-          this.dialogShow = false;
-          // 重新获取价格行情列表
-          this.getAllList();
         });
       } else if (this.flag == 'edit') {
         console.log('编辑');
@@ -369,7 +542,7 @@ export default {
       }
     },
     //编辑价格行情的提交
-    async editPriceInfoSubmit() {
+    editPriceInfoSubmit() {
       // const { data: res } = await this.$http.put('/price', this.form);
       this.form.offerTime = this.$moment(new Date(this.form.offerTime)).format('YYYY-MM-DD HH:mm:ss');
       userService.updatePriceInfo(this.form).then(res => {
@@ -382,7 +555,7 @@ export default {
         this.$message.success('更新成功');
       });
     },
-    async delPriceInfo(id) {
+    delPriceInfo(id) {
       // const { data: res } = await this.$http.delete(`/price/${id}`);
       userService.delPriceInfoById(id).then(res => {
         if (res.status !== 200) return this.$message.error('删除失败');

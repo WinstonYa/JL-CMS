@@ -11,8 +11,6 @@
       <el-tab-pane label="文章管理" name="first"> </el-tab-pane>
       <!-- 未发布文章管理栏 -->
       <el-tab-pane label="未发布文章管理" name="second"> </el-tab-pane>
-      <!-- 文章回收站栏 -->
-      <el-tab-pane label="文章回收站" name="third"> </el-tab-pane>
     </el-tabs>
 
     <el-card class="article-card">
@@ -20,7 +18,7 @@
       <el-button type="danger" size="small" icon="el-icon-delete" @click="handleBatchRemoveArticle()"
         >批量删除文章</el-button
       >
-      <el-button type="primary" size="small" icon="el-icon-circle-plus" @click="dialogShow = true">添加文章</el-button>
+      <el-button type="primary" size="small" icon="el-icon-circle-plus" @click="addArticle">添加文章</el-button>
       <el-select
         class="article-select-admin"
         @change="selectArticleTypeList"
@@ -29,6 +27,24 @@
       >
         <el-option v-for="item in options" :key="item.value" :label="item.label" :value="item.value"> </el-option>
       </el-select>
+
+      <el-input
+        v-model="listQuery.title"
+        size="small"
+        style="width: 120px;margin-left: 10px"
+        clearable
+        placeholder="标题"
+      ></el-input>
+      <el-button
+        class="filter-item"
+        size="small"
+        type="primary"
+        style=";margin-left: 0.5rem"
+        icon="el-icon-search"
+        @click="handleFilter"
+      >
+        查询
+      </el-button>
       <!-- 表格显示区域 -->
       <el-table
         :height="curHeight"
@@ -51,8 +67,39 @@
         <el-table-column align="center" label="标题" min-width="160">
           <template slot-scope="scope">
             <el-tooltip effect="light" :content="scope.row.title" placement="top">
-              <span>{{ scope.row.title }}</span>
+              <!--              <span>{{ scope.row.title }}</span>-->
+              <el-link type="primary" :underline="false" @click="editDialogRow(scope.row.id)">{{
+                scope.row.title
+              }}</el-link>
             </el-tooltip>
+          </template>
+        </el-table-column>
+        <el-table-column align="center" label="浏览量" width="100">
+          <template slot-scope="scope">
+            <el-tag v-if="scope.row.hasOwnProperty('pageviews')" type="success"> {{ scope.row.pageviews }}</el-tag>
+            <el-tag v-else type="success">0</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column align="center" label="文章状态" width="120">
+          <template slot-scope="scope">
+            <el-button
+              v-if="activeName === 'first'"
+              type="success"
+              size="mini"
+              style="width: 80px"
+              @click="handleModifyStatus(scope.row, 0)"
+            >
+              已发布
+            </el-button>
+            <el-button
+              v-if="activeName === 'second'"
+              type="danger"
+              size="mini"
+              style="width: 80px"
+              @click="handleModifyStatus(scope.row, 1)"
+            >
+              待发布
+            </el-button>
           </template>
         </el-table-column>
         <el-table-column align="center" label="发布时间" width="160">
@@ -179,6 +226,9 @@ import { informationSystemArticleType } from '../../plugins/dictionary';
 export default {
   data() {
     return {
+      listQuery: {
+        title: ''
+      },
       //提交状态
       flag: 'add',
       // 当前的页数
@@ -203,10 +253,13 @@ export default {
         articleStatus: '1',
         title: '',
         content: '',
+        simple: '',
         systemId: []
       },
       // 表单高度
       curHeight: 0,
+      //删除ids数组
+      ids: [],
       // 新增文章对话框的显示
       dialogShow: false,
       // 富文本
@@ -248,7 +301,8 @@ export default {
       sysOptions: [
         {
           value: '1',
-          label: '追溯信息系统'
+          label: '追溯信息系统',
+          disabled: false
         },
         {
           value: '2',
@@ -271,6 +325,21 @@ export default {
     };
   },
   methods: {
+    addArticle() {
+      this.row.articleTypeid = this.articleType;
+      if (this.row.articleTypeid === '政策法规') {
+        this.sysOptions.map(item => {
+          this.row.systemId.push(item.label);
+        });
+      } else {
+        this.sysOptions.map(item => {
+          if (item.disabled === false) {
+            this.row.systemId.push(item.label);
+          }
+        });
+      }
+      this.dialogShow = true;
+    },
     // 设定表格高度
     setTableHeight() {
       let h = document.documentElement.clientHeight || document.body.clientHeight;
@@ -278,16 +347,38 @@ export default {
     },
     //全选框事件
     checkSelect(data) {
-      console.log(data);
+      data.forEach(item => {
+        this.ids.push(item.id);
+      });
     },
     //批量删除文章
-    handleBatchRemoveArticle() {},
+    async handleBatchRemoveArticle() {
+      if (this.ids.length === 0) return this.$message.warning('请先选中要删除的文章');
+      const confirmResult = await this.$confirm('此操作将删除选中文章,是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).catch(err => err);
+      if (confirmResult !== 'confirm') return this.$message.info('已经取消删除');
+      this.ids.forEach(id => {
+        let params = {
+          id: id,
+          sysType: this.sysType
+        };
+        userService.articleDelete(params).then(res => {
+          if (res.status !== 200) return this.$message.error('删除文章失败');
+          this.getArticleList();
+        });
+      });
+    },
     //点击tab栏事件
     handleClick() {
+      this.pageNum = 1;
       this.getArticleList();
     },
     //获取增加文章下拉框选择的值
     selectArticleType(val) {
+      this.row.systemId = [];
       let obj = {};
       obj = this.options.find(item => {
         return item.value === val;
@@ -303,6 +394,17 @@ export default {
           item.disabled = true;
         });
       }
+      if (this.row.articleTypeid === '政策法规') {
+        this.sysOptions.map(item => {
+          this.row.systemId.push(item.label);
+        });
+      } else {
+        this.sysOptions.map(item => {
+          if (item.disabled === false) {
+            this.row.systemId.push(item.label);
+          }
+        });
+      }
       this.getArticleList();
     },
     //获取筛选文章列表下拉框的值
@@ -314,6 +416,11 @@ export default {
       this.articleType = obj.label;
       this.getArticleList();
     },
+    // 查询
+    handleFilter() {
+      this.pageNum = 1;
+      this.getArticleList();
+    },
     //获取文章列表
     getArticleList() {
       let status = this.activeName == 'first' ? '1' : '0';
@@ -323,6 +430,7 @@ export default {
         pageRow: this.pageSize,
         sysType: this.sysType,
         articleType: this.articleType,
+        title: this.listQuery.title,
         status
       };
       userService.getArticleList(params).then(res => {
@@ -395,9 +503,11 @@ export default {
     },
     // 新增文章的提交
     submitRow() {
+      console.log(this.$refs.myTextEditor.quill.getText().substring(0, 100));
       if (this.flag == 'add') {
         this.$refs.addFormRef.validate(valid => {
           if (!valid) return this.$message.error('信息填写不完整或不准确，请检查再提交！');
+          this.row.simple = this.$refs.myTextEditor.quill.getText().substring(0, 100);
           userService.articleAdd(this.row).then(res => {
             if (res.status !== 200) return this.$message.error('失败');
             this.$message.success('新增文章成功');
@@ -411,8 +521,43 @@ export default {
         this.editArticleSubmit();
       }
     },
+    // 修改文章发布状态
+    handleModifyStatus(row, item) {
+      let status;
+      if (item === 0) status = '待发布';
+      if (item === 1) status = '已发布';
+      console.log(row, item, status);
+      this.$confirm(`是否将文章状态修改为 ${status} ?`, '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      })
+        .then(() => {
+          userService.getArticleId(row.id).then(res => {
+            let sysArr = [];
+            sysArr.push(this.sysType);
+            this.row.articleTypeid = res.data.articleSysList[0].articleTypeid;
+            this.row.author = res.data.author;
+            this.row.articleStatus = item;
+            this.row.systemId = sysArr;
+            this.row.title = res.data.title;
+            this.row.content = res.data.content;
+            this.row.id = row.id;
+            console.log(this.row, item);
+            userService.articleUpdate(this.row).then(res => {
+              if (res.status !== 200) return this.$message.error('更新失败');
+              this.getArticleList();
+              this.$message.success('更新成功');
+            });
+          });
+        })
+        .catch(() => {
+          this.$message({ type: 'info', message: '已取消操作' });
+        });
+    },
     //编辑文章的提交
     editArticleSubmit() {
+      this.row.simple = this.$refs.myTextEditor.quill.getText().substring(0, 100);
       userService.articleUpdate(this.row).then(res => {
         if (res.status !== 200) return this.$message.error('更新文章信息失败');
         // 关闭对话框

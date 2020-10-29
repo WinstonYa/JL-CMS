@@ -10,15 +10,22 @@
     <el-card>
       <!-- 添加区域 -->
       <div>
+        <el-button type="danger" size="small" icon="el-icon-delete" @click="handleBatchRemove()">批量删除</el-button>
         <el-button type="primary" size="small" icon="el-icon-circle-plus" @click="addRow">添加</el-button>
-
+        <el-input
+          v-model="listQuery.productName"
+          size="small"
+          style="width: 120px;margin-left: 10px"
+          clearable
+          placeholder="产品名称"
+        ></el-input>
         <el-select
           v-model="listQuery.productCategory"
           size="small"
           placeholder="产品分类"
           clearable
           class="filter-item"
-          style="width: 130px;margin-left: 2rem"
+          style="width: 130px;margin-left: 10px"
         >
           <el-option v-for="item in productOptions" :key="item" :label="item" :value="item" />
         </el-select>
@@ -28,7 +35,7 @@
           placeholder="审核状态"
           clearable
           class="filter-item"
-          style="width: 130px;margin-left: 0.5rem"
+          style="width: 130px;margin-left: 10px"
         >
           <el-option v-for="item in stateTypeOptions" :key="item.key" :label="item.display_name" :value="item.key" />
         </el-select>
@@ -54,7 +61,9 @@
         :row-style="{ height: '5px' }"
         :cell-style="{ padding: '5px 0' }"
         :height="curHeight"
+        @selection-change="checkSelect"
       >
+        <el-table-column type="selection" width="40" label="全选"></el-table-column>
         <el-table-column align="center" label="序号" width="60">
           <template slot-scope="scope">
             {{ (listQuery.page - 1) * listQuery.limit + scope.$index + 1 }}
@@ -125,7 +134,7 @@
         </el-table-column>
         <el-table-column align="center" label="操作" width="200">
           <template slot-scope="scope">
-            <el-button type="info" size="mini" icon="el-icon-edit" @click="editRow(scope.row)">编辑 </el-button>
+            <el-button type="primary" size="mini" icon="el-icon-edit" @click="editRow(scope.row)">编辑 </el-button>
             <el-button type="danger" size="mini" icon="el-icon-delete" @click="deleteRow(scope.row.id)"
               >删除
             </el-button>
@@ -137,7 +146,7 @@
         @size-change="handleSizeChange"
         @current-change="handleCurrentChange"
         :current-page="listQuery.page"
-        :page-sizes="[10, 20, 30, 40]"
+        :page-sizes="[15, 20, 30, 40]"
         :page-size="listQuery.limit"
         layout="total, sizes, prev, pager, next, jumper"
         :total="total"
@@ -165,8 +174,8 @@
                     v-model="row.productCategory"
                     clearable
                     style="width: 100%"
-                    placeholder="请选择产品分类"
                     @change="getDic"
+                    placeholder="请选择产品分类"
                   >
                     <el-option v-for="item in productOptions" :key="item" :label="item" :value="item"></el-option>
                   </el-select>
@@ -177,6 +186,7 @@
                   <el-select
                     v-model="row.productName"
                     filterable
+                    allow-create
                     style="width: 100%"
                     placeholder="请输入产品名称关键词"
                   >
@@ -188,7 +198,7 @@
             </el-row>
             <el-row>
               <el-col :span="12">
-                <el-form-item label="价格:">
+                <el-form-item label="价格:" prop="price">
                   <el-input
                     v-model="row.price"
                     clearable
@@ -210,7 +220,7 @@
                 </el-form-item>
               </el-col>
               <el-col :span="6">
-                <el-form-item label="热度:" prop="description">
+                <el-form-item label="热度:" prop="popularity">
                   <el-input
                     v-model="row.popularity"
                     clearable
@@ -222,26 +232,23 @@
               </el-col>
               <el-col :span="6">
                 <el-form-item label="状态:" prop="status">
-                  <el-radio v-model="row.status" label="待审核">待审核</el-radio>
                   <el-radio v-model="row.status" label="审核通过">审核通过</el-radio>
+                  <el-radio v-model="row.status" label="待审核">待审核</el-radio>
                 </el-form-item>
               </el-col>
             </el-row>
-            <el-col :span="12">
-              <el-row>
-                <el-col :span="24">
-                  <el-form-item label="描述:" prop="description">
-                    <el-input
-                      v-model="row.description"
-                      clearable
-                      type="textarea"
-                      :autosize="{ minRows: 5, maxRows: 10 }"
-                      placeholder="请输入产品描述"
-                    ></el-input>
-                  </el-form-item>
-                </el-col>
-              </el-row>
-            </el-col>
+            <el-row>
+              <el-col :span="22">
+                <el-form-item label="描述:">
+                  <el-input
+                    v-model="row.description"
+                    type="textarea"
+                    :autosize="{ minRows: 5, maxRows: 10 }"
+                    placeholder="请输入产品描述"
+                  ></el-input>
+                </el-form-item>
+              </el-col>
+            </el-row>
             <el-row>
               <el-col :span="24" class="register-upload">
                 <el-form-item label="产品图片:">
@@ -309,7 +316,8 @@ export default {
       // 搜索条件
       listQuery: {
         page: 1,
-        limit: 10,
+        limit: 15,
+        productName: '', // 产品名称
         productCategory: '', // 产品分类
         status: '' //审核状态
       },
@@ -317,6 +325,8 @@ export default {
       total: 0,
       // 表单高度
       curHeight: 0,
+      //删除ids数组
+      ids: [],
       // 对话框
       dialogShow: false,
       listLoading: false,
@@ -354,13 +364,13 @@ export default {
       productOptions: ['粮油', '蔬菜', '水果', '牛羊猪肉', '家禽蛋类', '水产品', '其他'],
       // 验证规则
       rules: {
-        title: [{ required: true, message: '请输入文章标题', trigger: 'blur' }],
-        content: [{ required: true, message: '请输入文章内容', trigger: 'blur' }],
-        productCategory: [{ required: true, message: '请选择产品分类', trigger: 'blur' }],
-        source: [{ required: true, message: '请输入文章来源', trigger: 'blur' }],
-        pubTime: [{ required: true, message: '请选择发布时间', trigger: 'blur' }],
-        author: [{ required: true, message: '请输入作者', trigger: 'blur' }],
-        status: [{ required: true, message: '请输入状态', trigger: 'blur' }]
+        productCategory: [{ required: true, message: '请选择农产品分类', trigger: 'blur' }],
+        productName: [{ required: true, message: '请输入农产品名称', trigger: 'blur' }],
+        price: [{ required: true, message: '请选择产品价格', trigger: 'blur' }],
+        productOrigin: [{ required: false, message: '请输入产品产地', trigger: 'blur' }],
+        purchaseWay: [{ required: false, message: '请输入购买方式', trigger: 'blur' }],
+        popularity: [{ required: false, message: '请输入产品热度', trigger: 'blur' }],
+        status: [{ required: true, message: '请选择审核状态', trigger: 'blur' }]
       }
     };
   },
@@ -430,6 +440,28 @@ export default {
           this.$message({ type: 'info', message: '已取消操作' });
         });
     },
+    //全选框事件
+    checkSelect(data) {
+      console.log(data);
+      data.forEach(item => {
+        this.ids.push(item.id);
+      });
+    },
+    async handleBatchRemove() {
+      if (this.ids.length === 0) return this.$message.warning('请先选中要删除的优质农产品');
+      const confirmResult = await this.$confirm('此操作将删除选中优质农产品,是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).catch(err => err);
+      if (confirmResult !== 'confirm') return this.$message.info('已经取消删除');
+      userService.delHighQualityProductById(this.ids).then(res => {
+        if (res.status !== 200) return this.$message.error('删除优质农产品信息失败');
+        this.$message.success('删除优质农产品信息成功');
+        this.getAllList();
+      });
+    },
+
     // 当前页
     handleCurrentChange(val) {
       this.listQuery.page = val;
@@ -484,22 +516,25 @@ export default {
       this.imageUrl = file.url;
       this.dialogProductVisible = true;
     },
-    async getDic(item) {
-      // console.log(item);
-      // const { data: res } = await this.$http.post(`/dic/getDicByType?type=${item}`);
-      userService.getProductNameDicByType(item).then(res => {
+    getDic() {
+      let params = {
+        type: this.row.productCategory
+      };
+      userService.getProductNameDicByType(params).then(res => {
         if (res.status !== 200) return this.$message.error('获取失败');
         this.productList = res.data.rows;
-        console.log(this.productList);
         this.options = this.productList.map(item => {
           return { value: `${item.text}`, label: `${item.text}` };
         });
-        console.log(this.options);
+        this.row.productName = this.options[0].value;
       });
     },
     // 新增
     addRow() {
       this.flag = 'add';
+      this.row.popularity = 0;
+      this.row.productCategory = this.productOptions[0];
+      this.getDic();
       this.dialogShow = true;
     },
     // 编辑

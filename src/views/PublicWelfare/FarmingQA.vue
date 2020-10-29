@@ -10,6 +10,7 @@
     <el-card>
       <!-- 添加区域 -->
       <div>
+        <el-button type="danger" size="small" icon="el-icon-delete" @click="handleBatchRemove()">批量删除</el-button>
         <el-input
           v-model="listQuery.title"
           size="small"
@@ -67,7 +68,9 @@
         :row-style="{ height: '5px' }"
         :cell-style="{ padding: '5px 0' }"
         :height="curHeight"
+        @selection-change="checkSelect"
       >
+        <el-table-column type="selection" width="40" label="全选"></el-table-column>
         <el-table-column align="center" label="序号" width="60">
           <template slot-scope="scope">
             {{ (listQuery.page - 1) * listQuery.limit + scope.$index + 1 }}
@@ -121,7 +124,7 @@
               <div>{{ scope.row.replyContent }}</div>
               <span
                 slot="reference"
-                v-if="scope.row.hasOwnProperty('replyContent') && JSON.stringify(scope.row.content).length > 15"
+                v-if="scope.row.hasOwnProperty('replyContent') && JSON.stringify(scope.row.replyContent).length > 15"
                 >{{ scope.row.replyContent.substr(0, 15) }}...
               </span>
               <span v-else slot="reference">
@@ -138,7 +141,7 @@
 
         <el-table-column align="center" label="操作" width="200">
           <template slot-scope="scope">
-            <el-button type="info" size="mini" icon="el-icon-edit" @click="replyRow(scope.row)">回复 </el-button>
+            <el-button type="primary" size="mini" icon="el-icon-edit" @click="replyRow(scope.row)">回复 </el-button>
             <el-button type="danger" size="mini" icon="el-icon-delete" @click="deleteRow(scope.row.id)"
               >删除
             </el-button>
@@ -257,6 +260,8 @@ export default {
       total: 0,
       // 表单高度
       curHeight: 0,
+      //删除ids数组
+      ids: [],
       // 对话框
       dialogShow: false,
       // 删除提示框
@@ -374,6 +379,27 @@ export default {
     handleSizeChange(val) {
       this.listQuery.limit = val;
       this.getAllList();
+    },
+    //全选框事件
+    checkSelect(data) {
+      console.log(data);
+      data.forEach(item => {
+        this.ids.push(item.id);
+      });
+    },
+    async handleBatchRemove() {
+      if (this.ids.length === 0) return this.$message.warning('请先选中要删除的问答信息');
+      const confirmResult = await this.$confirm('此操作将删除选中问答信息,是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).catch(err => err);
+      if (confirmResult !== 'confirm') return this.$message.info('已经取消删除');
+      userService.delConsultById(this.ids).then(res => {
+        if (res.status !== 200) return this.$message.error('删除问答信息失败');
+        this.$message.success('删除问答信息成功');
+        this.getAllList();
+      });
     },
     // 当前页
     handleCurrentChange(val) {

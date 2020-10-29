@@ -8,6 +8,22 @@ const userService = {
   getUserInfo(params) {
     return request.get(API.getUserInfo, {}, params);
   },
+  // 分页获取所有用户信息
+  getAllUserInfo(params) {
+    return request.get(API.getAllUserInfo, params);
+  },
+  // 重置用户密码
+  resetPwd(params) {
+    return request.post(API.resetPwd, params);
+  },
+  // 删除用户
+  delUserInfo(id) {
+    return request.delete(API.delUserInfo(id));
+  },
+  // 更新用户信息
+  updateUserInfo(params) {
+    return request.put(API.updateUserInfo, params);
+  },
   //文章管理获取文章列表
   getArticleList(params) {
     return request.get(API.articleList, params);
@@ -46,6 +62,21 @@ const userService = {
   //修改特色农产品
   featureProductEdit(formData) {
     return request.put(API.featureProductEdit, formData);
+  },
+  // 新增三品一标
+  authInfoAdd(formData) {
+    return request.post(API.authInfoAdd, formData);
+  },
+  // 更新三品一标信息
+  authInfoEdit(formData) {
+    return request.post(API.authInfoEdit, formData);
+  },
+  // 删除三品一标信息
+  authInfoDel(id) {
+    return request.delete(API.authInfoDel(id));
+  },
+  getAuthInfoById(id) {
+    return request.get(API.authInfoById(id));
   },
   //企业名录列表
   getCompanylist(params) {
@@ -122,6 +153,10 @@ const userService = {
   replyQAById(params) {
     return request.post(API.replyQAById, params);
   },
+  // 删除一条留言信息
+  delQAById(id) {
+    return request.delete(API.delQAById + '/' + id);
+  },
   // 更新一条回复消息
   updateReplyQAInfo(params) {
     return request.put(API.updateReplyQAInfo, params);
@@ -129,7 +164,7 @@ const userService = {
   // 产销信息、市场行情
   // 修改 农产品产销信息/市场行情 发布状态
   updateMarketingInfo(params) {
-    return request.put(API.MarketingInfo, params);
+    return request.put(API.updateInfoById, params);
   },
   //删除一条  农产品产销信息/市场行情
   delMarketingInfoById(id) {
@@ -141,14 +176,28 @@ const userService = {
   },
 
   // 根据类型获取农产品名称的数据字典
-  getProductNameDicByType(type) {
-    return request.post(API.getProductNameDicByType + '?type=' + type);
+  getProductNameDicByType(params) {
+    return request.get(API.getProductNameDicByType, params);
   },
-
+  // 新增数据字典
+  addDicInfo(params) {
+    return request.post(API.addDicInfo, params);
+  },
+  // 更新数据字典
+  updateDicInfo(params) {
+    return request.post(API.updateDicInfo, params);
+  },
+  // 删除数据字典
+  delDicInfo(params) {
+    return request.post(API.delDicInfo, params);
+  },
   // 价格行情
   // 分页获取价格行情列表
   getPriceInfoListByPage(params) {
     return request.get(API.getPriceInfoListByPage, params);
+  },
+  importByExcel(formData) {
+    return request.post(API.importByExcel, formData);
   },
   // 根据id删除价格行情
   delPriceInfoById(id) {

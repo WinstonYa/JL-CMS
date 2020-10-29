@@ -11,6 +11,7 @@
     <el-card>
       <!-- 添加区域 -->
       <div>
+        <el-button type="danger" size="small" icon="el-icon-delete" @click="handleBatchRemove()">批量删除</el-button>
         <el-button type="primary" size="small" icon="el-icon-circle-plus" @click="addSwiperInfo">添加</el-button>
       </div>
 
@@ -25,6 +26,7 @@
         highlight-current-row
         :row-style="{ height: '5px' }"
         :cell-style="{ padding: '5px 0' }"
+        @selection-change="checkSelect"
       >
         <!--        <el-table-column align="center" label="序号" width="60">-->
         <!--          <template slot-scope="scope">-->
@@ -78,7 +80,7 @@
         </el-table-column>
         <el-table-column align="center" label="操作" width="200">
           <template slot-scope="scope">
-            <el-button type="success" size="mini" icon="el-icon-edit" @click="editSwiperInfo(scope.row)"
+            <el-button type="primary" size="mini" icon="el-icon-edit" @click="editSwiperInfo(scope.row)"
               >编辑
             </el-button>
             <el-button type="danger" size="mini" icon="el-icon-delete" @click="deleteSwiperInfo(scope.row.id)"
@@ -236,6 +238,8 @@ import { Debounce } from '@/utils/tool.js';
 export default {
   data() {
     return {
+      //删除ids数组
+      ids: [],
       // 表单高度
       curHeight: 0,
       //列表加载圈圈
@@ -319,16 +323,16 @@ export default {
         if (res.status !== 200) return this.$message.error('获取失败');
         this.rows = res.data.rows;
         console.log(res.data.rows);
-        this.rows.forEach(item => {
-          this.srcList.push(item.path);
-          // console.log(item.orderId);
-          this.swiperOrderOptions.forEach(element => {
-            // console.log(element.label == item.orderId);
-            if (element.label == item.orderId) {
-              element.disabled = true;
-            }
-          });
-        });
+        // this.rows.forEach(item => {
+        //   this.srcList.push(item.path);
+        //   // console.log(item.orderId);
+        //   this.swiperOrderOptions.forEach(element => {
+        //     // console.log(element.label == item.orderId);
+        //     if (element.label == item.orderId) {
+        //       element.disabled = true;
+        //     }
+        //   });
+        // });
         this.listLoading = false;
         this.total = res.data.total;
       });
@@ -465,6 +469,29 @@ export default {
       this.swiperListPhoto.push(swiperPhotoObj);
       this.uploadDisabled = this.swiperListPhoto.length >= this.limitcount;
       this.dialogShow = true;
+    },
+    //全选框事件
+    checkSelect(data) {
+      console.log(data);
+      data.forEach(item => {
+        this.ids.push(item.id);
+      });
+    },
+    async handleBatchRemove() {
+      if (this.ids.length === 0) return this.$message.warning('请先选中要删除的轮播图');
+      const confirmResult = await this.$confirm('此操作将删除选中轮播图,是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).catch(err => err);
+      if (confirmResult !== 'confirm') return this.$message.info('已经取消删除');
+      this.ids.forEach(id => {
+        userService.swiperInformationDelete(id).then(res => {
+          if (res.status !== 200) return this.$message.error('删除轮播图信息失败');
+          this.$message.success('删除轮播图信息成功');
+          this.getAllList();
+        });
+      });
     },
     //删除轮播图信息按钮
     async deleteSwiperInfo(id) {

@@ -4,19 +4,20 @@
     <el-breadcrumb separator-class="el-icon-arrow-right">
       <el-breadcrumb-item :to="{ path: '/home' }">首页</el-breadcrumb-item>
       <el-breadcrumb-item>电子商务子系统</el-breadcrumb-item>
-      <el-breadcrumb-item>价格行情管理</el-breadcrumb-item>
+      <el-breadcrumb-item>留言板信息管理</el-breadcrumb-item>
     </el-breadcrumb>
     <!-- 卡片视图区域 -->
     <el-card>
       <!-- 添加区域 -->
       <div>
+        <el-button type="danger" size="small" icon="el-icon-delete" @click="handleBatchRemove()">批量删除</el-button>
         <el-select
           v-model="listQuery.status"
           placeholder="审核状态"
           size="small"
           clearable
           class="filter-item"
-          style="width: 130px"
+          style="width: 130px;margin-left: 10px"
         >
           <el-option v-for="item in stateTypeOptions" :key="item.key" :label="item.display_name" :value="item.key" />
         </el-select>
@@ -52,7 +53,9 @@
         :row-style="{ height: '5px' }"
         :cell-style="{ padding: '5px 0' }"
         :height="curHeight"
+        @selection-change="checkSelect"
       >
+        <el-table-column type="selection" width="40" label="全选"></el-table-column>
         <el-table-column align="center" label="序号" width="60">
           <template slot-scope="scope">
             {{ (listQuery.page - 1) * listQuery.limit + scope.$index + 1 }}
@@ -125,7 +128,7 @@
         </el-table-column>
         <el-table-column align="center" label="操作" width="200">
           <template slot-scope="scope">
-            <el-button type="info" size="mini" icon="el-icon-edit" @click="replyRow(scope.row)">回复</el-button>
+            <el-button type="primary" size="mini" icon="el-icon-edit" @click="replyRow(scope.row)">回复</el-button>
             <el-button type="danger" size="mini" icon="el-icon-delete" @click="deleteRow(scope.row)">删除</el-button>
           </template>
         </el-table-column>
@@ -300,6 +303,8 @@ export default {
         replyTime: '' //回复时间
       },
       row: {},
+      //删除ids数组
+      ids: [],
       // el-table的数据
       tables: []
     };
@@ -321,6 +326,28 @@ export default {
         this.tables = res.data.rows;
         this.total = res.data.total;
         this.listLoading = false;
+      });
+    },
+    //全选框事件
+    checkSelect(data) {
+      console.log(data);
+      data.forEach(item => {
+        this.ids.push(item.id);
+      });
+    },
+    async handleBatchRemove() {
+      if (this.ids.length === 0) return this.$message.warning('请先选中要删除的留言信息');
+      const confirmResult = await this.$confirm('此操作将删除选中留言信息,是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).catch(err => err);
+      if (confirmResult !== 'confirm') return this.$message.info('已经取消删除');
+      this.ids.forEach(id => {
+        userService.delQAById(id).then(res => {
+          if (res.status !== 200) return this.$message.error('删除留言信息失败');
+          this.getAllList();
+        });
       });
     },
     handleFilter() {
@@ -399,8 +426,19 @@ export default {
           this.$message({ type: 'info', message: '已取消操作' });
         });
     },
-    deleteRow(row) {
+    async deleteRow(row) {
       console.log(row);
+      const confirmResult = await this.$confirm('此操作将删除该留言信息,是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).catch(err => err);
+      if (confirmResult !== 'confirm') return this.$message.info('已经取消删除');
+      userService.delQAById(row.id).then(res => {
+        if (res.status !== 200) return this.$message.error('删除留言信息失败');
+        this.$message.success('删除留言信息成功');
+        this.getAllList();
+      });
     },
     // 每页多少条
     handleSizeChange(val) {

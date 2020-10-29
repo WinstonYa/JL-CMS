@@ -11,6 +11,7 @@
     <el-card>
       <!-- 添加区域 -->
       <div>
+        <el-button type="danger" size="small" icon="el-icon-delete" @click="handleBatchRemove()">批量删除</el-button>
         <el-button type="primary" size="small" icon="el-icon-circle-plus" @click="addSwiperInfo">添加</el-button>
       </div>
 
@@ -25,6 +26,7 @@
         highlight-current-row
         :row-style="{ height: '5px' }"
         :cell-style="{ padding: '5px 0' }"
+        @selection-change="checkSelect"
       >
         <!--        <el-table-column align="center" label="序号" width="60">-->
         <!--          <template slot-scope="scope">-->
@@ -78,7 +80,7 @@
         </el-table-column>
         <el-table-column align="center" label="操作" width="200">
           <template slot-scope="scope">
-            <el-button type="success" size="mini" icon="el-icon-edit" @click="editSwiperInfo(scope.row)"
+            <el-button type="primary" size="mini" icon="el-icon-edit" @click="editSwiperInfo(scope.row)"
               >编辑
             </el-button>
             <el-button type="danger" size="mini" icon="el-icon-delete" @click="deleteSwiperInfo(scope.row.id)"
@@ -121,7 +123,6 @@
                     filterable
                     v-model="row.targetSystem"
                     placeholder="请选择系统类型"
-                    clearable
                     style="width: 300px"
                   >
                     <el-option v-for="item in sysTypeOptions" :key="item" :label="item" :value="item" />
@@ -135,11 +136,15 @@
                     filterable
                     v-model="row.articleTypeid"
                     placeholder="请选择文章类型"
-                    clearable
                     style="width: 300px"
                     @change="getArticleListBySystemType"
                   >
-                    <el-option v-for="item in articleTypeOptions" :key="item" :label="item" :value="item" />
+                    <el-option
+                      v-for="item in articleTypeOptions"
+                      :key="item.label"
+                      :label="item.label"
+                      :value="item.label"
+                    />
                   </el-select>
                 </el-form-item>
               </el-col>
@@ -150,7 +155,7 @@
                   <el-select
                     filterable
                     v-model="row.title"
-                    @focus="getArticleListBySystemType"
+                    @blur="getArticleListBySystemType()"
                     placeholder="请选择文章标题"
                     clearable
                     style="width: 500px"
@@ -172,7 +177,7 @@
                 </el-form-item>
               </el-col>
               <el-col :span="12">
-                <el-form-item label="图片序号：" prop="orderId">
+                <el-form-item label="轮播顺序：" prop="orderId">
                   <el-select v-model="row.orderId" placeholder="请选择图片序号">
                     <el-option
                       v-for="item in swiperOrderOptions"
@@ -232,10 +237,13 @@
 <script>
 import userService from '@/globals/service/user.js';
 import { Debounce } from '@/utils/tool.js';
+import { dzswArticleType } from '../../plugins/dictionary';
 
 export default {
   data() {
     return {
+      //删除ids数组
+      ids: [],
       // 表单高度
       curHeight: 0,
       //列表加载圈圈
@@ -271,7 +279,7 @@ export default {
       //系统类型选择
       sysTypeOptions: ['电子商务系统'],
       //文章类型
-      articleTypeOptions: ['政策法规', '农业新闻', '工作动态', '监督管理'],
+      articleTypeOptions: [],
       //文章标题
       articleTitleOptions: [],
       //轮播图排序orderId
@@ -304,6 +312,7 @@ export default {
     };
   },
   created() {
+    this.articleTypeOptions = dzswArticleType;
     this.getAllList();
     this.setTableHeight();
     window.onresize = () => {
@@ -318,19 +327,42 @@ export default {
       userService.getInformationSwiperList(params).then(res => {
         if (res.status !== 200) return this.$message.error('获取失败');
         this.rows = res.data.rows;
-        console.log(res.data.rows)
-        this.rows.forEach(item => {
-          this.srcList.push(item.path);
-          // console.log(item.orderId);
-          this.swiperOrderOptions.forEach(element => {
-            // console.log(element.label == item.orderId);
-            if (element.label == item.orderId) {
-              element.disabled = true;
-            }
-          });
-        });
+        // console.log(res.data.rows)
+        // this.rows.forEach(item => {
+        //   this.srcList.push(item.path);
+        //   // console.log(item.orderId);
+        //   this.swiperOrderOptions.forEach(element => {
+        //     // console.log(element.label == item.orderId);
+        //     if (element.label == item.orderId) {
+        //       element.disabled = true;
+        //     }
+        //   });
+        // });
         this.listLoading = false;
         this.total = res.data.total;
+      });
+    },
+    //全选框事件
+    checkSelect(data) {
+      console.log(data);
+      data.forEach(item => {
+        this.ids.push(item.id);
+      });
+    },
+    //批量删除
+    async handleBatchRemove() {
+      if (this.ids.length === 0) return this.$message.warning('请先选中要删除的轮播图');
+      const confirmResult = await this.$confirm('此操作将删除选中轮播图,是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).catch(err => err);
+      if (confirmResult !== 'confirm') return this.$message.info('已经取消删除');
+      this.ids.forEach(id => {
+        userService.swiperInformationDelete(id).then(res => {
+          if (res.status !== 200) return this.$message.error('删除轮播图信息失败');
+          this.getAllList();
+        });
       });
     },
     // 处理图片
@@ -359,7 +391,7 @@ export default {
     },
     //上传图片的钩子
     handlePictureCardPreview(file) {
-      console.log(file);
+      // console.log(file);
       this.dialogImageUrl = file.url;
       this.dialogVisible = true;
     },
@@ -391,11 +423,11 @@ export default {
             this.dialogShow = false;
           }, 3000);
         } else if (this.flag === 'edit') {
-          console.log('编辑');
+          // console.log('编辑');
           // formData.append('id', this.row.id);
           // formData.append('url', 'url');
           // formData.append('imgId', this.row.imgId);
-          console.log(this.swiperListPhoto[0].raw);
+          // console.log(this.swiperListPhoto[0].raw);
           userService.updateCarousel(formData).then(res => {
             if (res.status !== 200) return this.$message.error('失败');
             this.$message.success('更新成功');
@@ -408,7 +440,7 @@ export default {
     }),
     //发布状态的按钮
     changSwitch(data, item) {
-      console.log(item);
+      // console.log(item);
       let id = item.id;
       let status = item.status;
       let formData = new FormData();
@@ -425,40 +457,37 @@ export default {
     addSwiperInfo() {
       this.flag = 'add';
       this.row.targetSystem = this.sysTypeOptions[0]; // 给默认目标系统
-      this.row.articleTypeid = this.articleTypeOptions[0]; // 给默认文章类型
+      this.row.articleTypeid = dzswArticleType[0].label; // 给默认文章类型
       this.getArticleListBySystemType();
-      this.row.title = '';
-      this.row.publisher = '';
-      this.row.orderId = '';
-      this.row.state = 0;
-      console.log(this.row.title);
+      this.row.orderId = this.swiperOrderOptions[0].label; // 初始化轮播图顺序
+      this.row.status = '1'; //发布状态初始化为已发布
       this.dialogShow = true;
     },
     getArticleListBySystemType() {
       let searchQuery = {
         pageNum: 1,
-        pageRow: 10,
+        pageRow: 100,
         sysType: this.row.targetSystem,
         articleType: this.row.articleTypeid,
         status: 1,
-        title: this.row.title
+        title: ''
       };
-      console.log(searchQuery);
       // //根据系统名称和文章类型模糊查询文章。限制条数。
       userService.getArticleList(searchQuery).then(res => {
         if (res.status === 200) {
           this.row.title = '';
           this.articleTitleOptions = [];
-          console.log(res.data.rows);
+          // console.log(res.data.rows);
           res.data.rows.forEach(item => {
             this.articleTitleOptions.push(item);
           });
         }
+        this.row.title = this.articleTitleOptions[0]; // 给默认文章类型
       });
     },
     //编辑按钮事件
     editSwiperInfo(row) {
-      console.log(row);
+      // console.log(row);
       this.flag = 'edit';
       this.row = row;
       this.row.imgId = row.img;

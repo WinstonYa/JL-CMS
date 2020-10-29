@@ -110,7 +110,7 @@ export default {
                     this.$message.success('登录成功！');
                     localStorage.setItem('token', token);
                     localStorage.setItem('userInfo', JSON.stringify(res.data));
-                    this.$router.push('/home');
+                    this.$router.push('/commerce-article');
                   } else {
                     this.$message.warning('您没有使用后台管理系统的权限，请联系管理员！');
                   }
@@ -131,7 +131,7 @@ export default {
 
 <style lang="less" scoped>
 .login-container {
-  background-color: #2b4b6b;
+  background-color: #345298;
   height: 100%;
 }
 
@@ -151,7 +151,7 @@ export default {
     width: 450px;
     height: 50px;
     line-height: 50px;
-    font-size: 30px;
+    font-size: 34px;
     font-weight: 600;
     color: #fff;
     text-align: center;

@@ -49,6 +49,10 @@ export default [
         component: () => import('@/views/Commerce/CommerceAdminSwiper.vue')
       },
       {
+        path: '/data-dictionary',
+        component: () => import('@/views/Commerce/DataDictionary.vue')
+      },
+      {
         path: '/admin-article',
         component: () => import('@/views/PublicWelfare/AdminArticle.vue')
       },
@@ -71,6 +75,10 @@ export default [
       {
         path: '/public-welfare-swiper',
         component: () => import('@/views/PublicWelfare/PublicWelfareSwiper.vue')
+      },
+      {
+        path: '/user-management',
+        component: () => import('@/views/PublicWelfare/UserManagement.vue')
       },
       {
         path: '/admin-farm-article',

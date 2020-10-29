@@ -9,6 +9,7 @@
     <el-card>
       <!-- 添加区域 -->
       <div>
+        <el-button type="danger" size="small" icon="el-icon-delete" @click="handleBatchRemove()">批量删除</el-button>
         <el-button type="primary" size="small" icon="el-icon-circle-plus" @click="addRow">添加专家信息</el-button>
         <el-input
           v-model="listQuery.expertName"
@@ -19,12 +20,12 @@
           placeholder="专家名称"
         ></el-input>
         <el-input
-                v-model="listQuery.serviceArea"
-                size="small"
-                style="width: 120px;margin-left: 20px"
-                clearable
-                @input="handleFilter"
-                placeholder="服务地区"
+          v-model="listQuery.serviceArea"
+          size="small"
+          style="width: 120px;margin-left: 20px"
+          clearable
+          @input="handleFilter"
+          placeholder="服务地区"
         ></el-input>
         <el-button
           class="filter-item"
@@ -141,7 +142,7 @@
           <el-tab-pane label="专家基本信息">
             <el-row>
               <el-col :span="12">
-                <el-form-item label="专家姓名:" prop="name">
+                <el-form-item label="专家姓名:" prop="expertName">
                   <el-input v-model="row.expertName" clearable maxlength="20" placeholder="请输入专家姓名"></el-input>
                 </el-form-item>
               </el-col>
@@ -172,12 +173,12 @@
 
             <el-row>
               <el-col :span="12">
-                <el-form-item label="职称:" prop="job_title">
+                <el-form-item label="职称:" prop="jobTitle">
                   <el-input v-model="row.jobTitle" clearable maxlength="20" placeholder="请输入职称"></el-input>
                 </el-form-item>
               </el-col>
               <el-col :span="12">
-                <el-form-item label="服务地区:" prop="service_area">
+                <el-form-item label="服务地区:" prop="serviceArea">
                   <el-input v-model="row.serviceArea" clearable placeholder="请输入服务地区"></el-input>
                 </el-form-item>
               </el-col>
@@ -257,6 +258,8 @@ export default {
       },
       // 表单高度
       curHeight: 0,
+      //删除ids数组
+      ids: [],
       // 新增专家信息弹窗
       dialogShow: false,
       listLoading: false,
@@ -269,7 +272,15 @@ export default {
       //提交状态
       flag: 'add',
       // 验证规则
-      rules: {}
+      rules: {
+        expertName: [{ required: true, message: '请输入专家姓名', trigger: 'blur' }],
+        phone: [{ required: true, message: '请输入联系电话', trigger: 'blur' }],
+        wechat: [{ required: true, message: '请输入微信号', trigger: 'blur' }],
+        expertise: [{ required: true, message: '请输入业务专长', trigger: 'blur' }],
+        jobTitle: [{ required: true, message: '请输入职称', trigger: 'blur' }],
+        serviceArea: [{ required: true, message: '请输入服务地区', trigger: 'blur' }],
+        introduction: [{ required: true, message: '请输入专家简介', trigger: 'blur' }]
+      }
     };
   },
   created() {
@@ -302,8 +313,26 @@ export default {
       this.getList();
     },
     //全选框事件
-    checkSelect() {
-      // console.log(data);
+    checkSelect(data) {
+      console.log(data);
+      data.forEach(item => {
+        this.ids.push(item.id);
+      });
+    },
+    async handleBatchRemove() {
+      if (this.ids.length === 0) return this.$message.warning('请先选中要删除的专家信息');
+      const confirmResult = await this.$confirm('此操作将删除选中专家信息,是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).catch(err => err);
+      if (confirmResult !== 'confirm') return this.$message.info('已经取消删除');
+      userService.delExpertById(this.ids).then(res => {
+        console.log(res);
+        if (res.status !== 200) return this.$message.error('删除专家信息失败');
+        this.$message.success('删除专家信息成功');
+        this.getList();
+      });
     },
     // 新增
     addRow() {
@@ -319,7 +348,7 @@ export default {
       this.row = {};
       userService.getExpertInfo(row.id).then(res => {
         this.row = res.data;
-        this.imageUrl =  res.data.photo;
+        this.imageUrl = res.data.photo;
         console.log(this.imageUrl);
       });
       this.dialogShow = true;

@@ -157,7 +157,15 @@
             <el-row>
               <el-col :span="12">
                 <el-form-item label="视频分类:" prop="type">
-                  <el-input v-model="row.type" clearable maxlength="20" placeholder="请输入视频分类"></el-input>
+                  <el-select v-model="row.type" placeholder="请输入视频分类">
+                    <el-option
+                      v-for="item in videoTypeOptions"
+                      :key="item.display_name"
+                      :label="item.display_name"
+                      :value="item.display_name"
+                    >
+                    </el-option>
+                  </el-select>
                 </el-form-item>
               </el-col>
               <el-col :span="12">
@@ -165,7 +173,6 @@
                   <el-input
                     v-model="row.watchTimes"
                     onkeyup="this.value=this.value.replace(/[^\d]/g,'')"
-                    clearable
                     placeholder="请输入浏览量"
                   ></el-input>
                 </el-form-item>
@@ -174,7 +181,13 @@
             <el-row>
               <el-col :span="24">
                 <el-form-item label="发布时间:" prop="pubTime">
-                  <el-date-picker v-model="row.pubTime" type="datetime" style="width: 100%" placeholder="选择发布时间">
+                  <el-date-picker
+                    v-model="row.pubTime"
+                    :clearable="false"
+                    type="datetime"
+                    style="width: 100%"
+                    placeholder="选择发布时间"
+                  >
                   </el-date-picker>
                 </el-form-item>
               </el-col>
@@ -199,7 +212,7 @@
                   <el-upload
                     class="upload-demo"
                     ref="upload"
-                    v-model="videoFile"
+                    v-model="row.videoFile"
                     drag
                     action
                     :before-upload="beforeUploadVideo"
@@ -229,9 +242,16 @@
 <script>
 import userService from '../../globals/service/user';
 
+const videoTypeOptions = [
+  { key: '农业科技', display_name: '农业科技' },
+  { key: '讲座培训', display_name: '讲座培训' },
+  { key: '文化生活', display_name: '文化生活' }
+];
+
 export default {
   data() {
     return {
+      videoTypeOptions,
       activeName: '',
       // 搜索条件
       listQuery: {
@@ -250,7 +270,8 @@ export default {
         description: '', // 视频描述
         state: '', // 视频状态 0表示未完成，1表示已完成
         watchTimes: '0', // 浏览量
-        pubTime: '' // 发布时间
+        pubTime: '', // 发布时间
+        videoFile: null
       },
       video: '',
       // 表单高度
@@ -260,7 +281,7 @@ export default {
       listLoading: false,
       // 文件上传
       videoUrl: '',
-      videoFile: '',
+      // videoFile: null,
       dialogVideoVisible: false,
       // 上传文件
       multfileImg: null,
@@ -268,7 +289,7 @@ export default {
       flag: 'add',
       // 验证规则
       rules: {
-        // videoFile: [{ required: true, message: '请上传视频', trigger: 'change' }],
+        videoFile: [{ required: true, message: '请上传视频', trigger: 'change' }],
         videoName: [{ required: true, message: '请输入视频名称', trigger: 'blur' }],
         author: [{ required: true, message: '请输入作者名称', trigger: 'blur' }],
         type: [{ required: true, message: '请输入视频类型', trigger: 'blur' }],
@@ -296,8 +317,8 @@ export default {
       this.videoUrl = ''; //清空数据 关闭视频播放
     },
     handleChange(file, fileList) {
-      this.videoFile = file;
-      console.log(this.videoFile);
+      this.row.videoFile = file;
+      console.log(this.row.videoFile);
       this.fileList = [fileList[fileList.length - 1]];
       this.$refs.addFormRef.clearValidate();
     },
@@ -311,7 +332,7 @@ export default {
       if (
         ['video/mp4', 'video/ogg', 'video/flv', 'video/avi', 'video/wmv', 'video/rmvb', 'video/mov'].indexOf(
           file.type
-        ) == -1
+        ) === -1
       ) {
         this.$message.error('不支持此视频格式');
         this.fileList = [];
@@ -319,7 +340,7 @@ export default {
         this.$message.error('视频大小不能超过500MB');
         this.fileList = [];
       } else {
-        this.videoFile = file;
+        this.row.videoFile = file;
       }
 
       // 不使用upload自带的上传方式，而是使用axios，所以阻止upload自带的上传
@@ -343,7 +364,7 @@ export default {
     },
     //批量删除视频信息
     async handleBatchRemoveVideo() {
-      if (this.ids.length == 0) return this.$message.warning('请先选中要删除的视频信息');
+      if (this.ids.length === 0) return this.$message.warning('请先选中要删除的视频信息');
       const confirmResult = await this.$confirm('此操作将删除选中视频信息,是否继续?', '提示', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
@@ -365,9 +386,9 @@ export default {
     // 新增
     addRow() {
       this.flag = 'add';
-      this.row = {};
       this.row.watchTimes = 0;
       this.row.pubTime = this.$moment(new Date()).format('YYYY-MM-DD HH:mm:ss');
+      this.row.type = this.videoTypeOptions[0].display_name;
       this.videoUrl = '';
       this.dialogShow = true;
     },
@@ -410,7 +431,7 @@ export default {
     DialogClose() {
       this.row = {};
       this.$refs.addFormRef.clearValidate();
-      this.videoFile = '';
+      this.row.videoFile = '';
       this.$refs.upload.clearFiles();
       this.getAllList();
     },
@@ -431,7 +452,7 @@ export default {
       //   type: this.row.type, // 视频分类
       //   extension:extension   // 视频后缀
       // }
-      if (this.videoFile == '') return this.$message.error('请上传视频');
+      console.log(this.row.videoFile);
       this.$refs.addFormRef.validate(valid => {
         if (!valid) return this.$message.error('信息填写不完整或不准确，请检查再提交！');
         let formData = new FormData();
@@ -440,7 +461,7 @@ export default {
         formData.append('type', this.row.type);
         formData.append('description', this.row.description);
         formData.append('watchTimes', this.row.watchTimes);
-        formData.append('file', this.videoFile);
+        formData.append('file', this.row.videoFile);
         userService
           .videoInfoAdd(formData)
           .then(res => {

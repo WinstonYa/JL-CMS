@@ -18,6 +18,7 @@
     <el-card class="article-card">
       <!-- 添加区域 -->
       <div>
+        <el-button type="danger" size="small" icon="el-icon-delete" @click="handleBatchRemove()">批量删除</el-button>
         <el-button type="primary" size="small" icon="el-icon-circle-plus" @click="addRow">添加供求信息</el-button>
         <!--        <el-select-->
         <!--          v-model="listQuery.productCategory"-->
@@ -35,14 +36,12 @@
           style="width: 120px;margin-left: 20px"
           clearable
           placeholder="标题"
-          @input="handleFilter"
         ></el-input>
         <el-input
           v-model="listQuery.contactPerson"
           size="small"
           style="width: 120px;margin-left: 20px"
           clearable
-          @input="handleFilter"
           placeholder="联系人"
         ></el-input>
 
@@ -51,7 +50,6 @@
           size="small"
           placeholder="审核状态"
           clearable
-          @change="handleFilter"
           class="filter-item"
           style="width: 130px;margin-left: 0.5rem"
         >
@@ -279,7 +277,7 @@
 
             <el-row>
               <el-col :span="24" class="register-upload">
-                <el-form-item label="产品图片:">
+                <el-form-item label="产品图片:" prop="pic">
                   <el-upload
                     :action="updateUrl"
                     :http-request="httpRequest"
@@ -388,10 +386,20 @@ export default {
       listLoading: false,
       // 表单高度
       curHeight: 0,
+      //删除ids数组
+      ids: [],
       //提交状态
       flag: 'add',
       // 验证规则
-      rules: {},
+      rules: {
+        title: [{ required: true, message: '请输入标题', trigger: 'blur' }],
+        contactPerson: [{ required: true, message: '请输入联系人', trigger: 'blur' }],
+        phone: [{ required: true, message: '请输入联系电话', trigger: 'blur' }],
+        area: [{ required: true, message: '请输入服务地区', trigger: 'blur' }],
+        description: [{ required: true, message: '请输入描述信息', trigger: 'blur' }],
+        pubType: [{ required: true, message: '请选择供求类型', trigger: 'blur' }],
+        status: [{ required: true, message: '请选择审核状态', trigger: 'blur' }]
+      },
       dialogImageUrl: '',
       dialogVisible: false
     };
@@ -444,9 +452,9 @@ export default {
     getList() {
       this.listLoading = true;
       if (this.activeName === 'supply') {
-        this.listQuery.pubType = '供应信息';
+        this.listQuery.pubType = '0';
       } else if (this.activeName === 'demand') {
-        this.listQuery.pubType = '求购信息';
+        this.listQuery.pubType = '1';
       } else if (this.activeName === 'all') {
         this.listQuery.pubType = '';
       }
@@ -477,8 +485,25 @@ export default {
       this.getList();
     },
     //全选框事件
-    checkSelect() {
-      // console.log(data);
+    checkSelect(data) {
+      console.log(data);
+      data.forEach(item => {
+        this.ids.push(item.id);
+      });
+    },
+    async handleBatchRemove() {
+      if (this.ids.length === 0) return this.$message.warning('请先选中要删除的供求信息');
+      const confirmResult = await this.$confirm('此操作将删除选中供求信息,是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).catch(err => err);
+      if (confirmResult !== 'confirm') return this.$message.info('已经取消删除');
+      userService.delSupplyDemandById(this.ids).then(res => {
+        if (res.status !== 200) return this.$message.error('删除供求信息失败');
+        this.$message.success('删除供求信息成功');
+        this.getList();
+      });
     },
     // 修改审核状态
     handleModifyStatus(row, item) {
@@ -511,10 +536,13 @@ export default {
     addRow() {
       this.flag = 'add';
       if (this.activeName === 'supply') {
-        this.row.pubType = '0';  // 供应信息
+        this.row.pubType = '0'; // 供应信息
       } else if (this.activeName === 'demand') {
-        this.row.pubType = '1';  // 求购信息
+        this.row.pubType = '1'; // 求购信息
+      } else {
+        this.row.pubType = '0'; // 供应信息
       }
+      this.row.pubTime = this.$moment(new Date()).format('YYYY-MM-DD HH:mm:ss');
       (this.row.status = '1'), (this.dialogShow = true);
     },
     // 设定表格高度
