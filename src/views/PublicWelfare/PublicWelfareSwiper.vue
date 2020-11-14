@@ -399,19 +399,12 @@ export default {
         if (!valid) return this.$message.error('信息填写不完整或不准确，请检查再提交！');
         let formData = new FormData();
         formData.append('file', this.swiperListPhoto[0].raw);
-        for (let key in this.row) {
-          let value = this.row[key];
-          if (value !== null) {
-            formData.append(key, value);
-          }
-        }
+        formData.append('targetSystem', this.row.targetSystem);
+        formData.append('articleTypeid', this.row.articleTypeid);
+        formData.append('publisher', this.row.publisher);
         formData.append('articleId', this.row.title);
-        // formData.append('targetSystem', this.row.targetSystem);
-        // formData.append('articleTypeid', this.row.articleTypeid);
-        // formData.append('publisher', this.row.publisher);
-        // formData.append('articleId', this.row.title);
-        // formData.append('status', this.row.status);
-        // formData.append('orderId', this.row.orderId);
+        formData.append('status', this.row.status);
+        formData.append('orderId', this.row.orderId);
         if (this.flag === 'add') {
           userService.addCarousel(formData).then(res => {
             if (res.status !== 200) return this.$message.error('失败');
@@ -422,9 +415,11 @@ export default {
           }, 3000);
         } else if (this.flag === 'edit') {
           console.log('编辑');
-          // formData.append('id', this.row.id);
-          // formData.append('url', 'url');
-          // formData.append('imgId', this.row.imgId);
+          formData.append('id', this.row.id);
+          console.log('id',this.row.id);
+          formData.append('url', 'url');
+          formData.append('imgId', this.row.imgId);
+          console.log('imgId',this.row.imgId);
           console.log(this.swiperListPhoto[0].raw);
           userService.updateCarousel(formData).then(res => {
             if (res.status !== 200) return this.$message.error('失败');
@@ -469,7 +464,7 @@ export default {
         sysType: this.row.targetSystem,
         articleType: this.row.articleTypeid,
         status: 1,
-        title: ''
+        title: this.row.title
       };
       console.log(searchQuery);
       // //根据系统名称和文章类型模糊查询文章。限制条数。
@@ -482,7 +477,6 @@ export default {
             this.articleTitleOptions.push(item);
           });
         }
-        this.row.title = this.articleTitleOptions[0]; // 给默认文章类型
       });
     },
     //编辑按钮事件

@@ -387,6 +387,7 @@ export default {
         }
         this.getAllList();
         this.dialogVisible = false;
+        this.fileList = [];
       });
     },
     handleProductChange(file, fileList) {
@@ -486,6 +487,7 @@ export default {
     //Excel 导入
     importByExcel() {
       console.log('从excel导入价格行情');
+      this.fileList = [];
       this.dialogVisible = true;
     },
     // 编辑

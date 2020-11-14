@@ -429,7 +429,7 @@ export default {
       });
     },
     DialogClose() {
-      this.row = {};
+      this.$refs.addFormRef.resetFields();
       this.$refs.addFormRef.clearValidate();
       this.row.videoFile = '';
       this.$refs.upload.clearFiles();

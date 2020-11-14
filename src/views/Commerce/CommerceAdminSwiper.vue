@@ -151,11 +151,11 @@
             </el-row>
             <el-row>
               <el-col :span="20">
-                <el-form-item label="文章标题：" prop="title" @focus="getArticleListBySystemType">
+                <el-form-item label="文章标题：" prop="articleId" @focus="getArticleListBySystemType">
                   <el-select
                     filterable
-                    v-model="row.title"
-                    @blur="getArticleListBySystemType()"
+                    v-model="row.articleId"
+                    @focus="getArticleListBySystemType()"
                     placeholder="请选择文章标题"
                     clearable
                     style="width: 500px"
@@ -255,7 +255,7 @@ export default {
         imgId: '',
         targetSystem: '',
         articleTypeid: '',
-        title: '',
+        articleId: '',
         publisher: '',
         status: '',
         orderId: []
@@ -302,7 +302,7 @@ export default {
       rules: {
         targetSystem: [{ required: true, message: '请选择系统类型', trigger: 'blur' }],
         articleTypeid: [{ required: true, message: '请选择文章类型', trigger: 'blur' }],
-        title: [{ required: true, message: '请选择文章标题', trigger: 'blur' }],
+        articleId: [{ required: true, message: '请选择文章标题', trigger: 'blur' }],
         publisher: [{ required: true, message: '请输入发布者名称', trigger: 'blur' }],
         status: [{ required: true, message: '请选择发布状态', trigger: 'blur' }],
         orderId: [{ required: true, message: '请选择图片排序', trigger: 'blur' }]
@@ -401,19 +401,12 @@ export default {
         if (!valid) return this.$message.error('信息填写不完整或不准确，请检查再提交！');
         let formData = new FormData();
         formData.append('file', this.swiperListPhoto[0].raw);
-        for (let key in this.row) {
-          let value = this.row[key];
-          if (value !== null) {
-            formData.append(key, value);
-          }
-        }
-        formData.append('articleId', this.row.title);
-        // formData.append('targetSystem', this.row.targetSystem);
-        // formData.append('articleTypeid', this.row.articleTypeid);
-        // formData.append('publisher', this.row.publisher);
-        // formData.append('articleId', this.row.title);
-        // formData.append('status', this.row.status);
-        // formData.append('orderId', this.row.orderId);
+        formData.append('targetSystem', this.row.targetSystem);
+        formData.append('articleTypeid', this.row.articleTypeid);
+        formData.append('publisher', this.row.publisher);
+        formData.append('articleId', this.row.articleId);
+        formData.append('status', this.row.status);
+        formData.append('orderId', this.row.orderId);
         if (this.flag === 'add') {
           userService.addCarousel(formData).then(res => {
             if (res.status !== 200) return this.$message.error('失败');
@@ -423,11 +416,11 @@ export default {
             this.dialogShow = false;
           }, 3000);
         } else if (this.flag === 'edit') {
-          // console.log('编辑');
-          // formData.append('id', this.row.id);
-          // formData.append('url', 'url');
-          // formData.append('imgId', this.row.imgId);
-          // console.log(this.swiperListPhoto[0].raw);
+          console.log('编辑');
+          formData.append('id', this.row.id);
+          formData.append('url', 'url');
+          formData.append('imgId', this.row.img);
+          console.log(this.swiperListPhoto[0].raw);
           userService.updateCarousel(formData).then(res => {
             if (res.status !== 200) return this.$message.error('失败');
             this.$message.success('更新成功');
@@ -466,31 +459,35 @@ export default {
     getArticleListBySystemType() {
       let searchQuery = {
         pageNum: 1,
-        pageRow: 100,
+        pageRow: 10,
         sysType: this.row.targetSystem,
         articleType: this.row.articleTypeid,
         status: 1,
-        title: ''
+        title: this.row.title
       };
+      console.log(searchQuery);
       // //根据系统名称和文章类型模糊查询文章。限制条数。
       userService.getArticleList(searchQuery).then(res => {
         if (res.status === 200) {
           this.row.title = '';
           this.articleTitleOptions = [];
-          // console.log(res.data.rows);
+          console.log(res.data.rows);
           res.data.rows.forEach(item => {
             this.articleTitleOptions.push(item);
           });
         }
-        this.row.title = this.articleTitleOptions[0]; // 给默认文章类型
       });
     },
     //编辑按钮事件
     editSwiperInfo(row) {
-      // console.log(row);
+      console.log(row);
       this.flag = 'edit';
       this.row = row;
-      this.row.imgId = row.img;
+      if (row.img) {
+        this.row.imgId = null;
+      } else {
+        this.row.imgId = row.img;
+      }
       this.row.targetSystem = this.sysTypeOptions[0]; // 给默认目标系统
       this.row.articleTypeid = this.articleTypeOptions[0]; // 给默认文章类型
       let swiperPhotoObj = { name: row.img, url: row.path };

@@ -348,6 +348,9 @@ export default {
         formData.append('code', this.row.code);
         formData.append('type', this.row.type);
         formData.append('text', this.row.text);
+        if (this.row.remark === undefined) {
+          this.row.remark = '';
+        }
         formData.append('remark', this.row.remark);
         if (this.flag === 'add') {
           userService.addDicInfo(formData).then(res => {

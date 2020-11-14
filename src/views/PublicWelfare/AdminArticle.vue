@@ -127,7 +127,7 @@
         @size-change="handleSizeChange"
         @current-change="handleCurrentChange"
         :current-page="pageNum"
-        :page-sizes="[5, 10, 15, 20]"
+        :page-sizes="[15, 20, 25, 30]"
         :page-size="pageSize"
         layout="total, sizes, prev, pager, next, jumper"
         :total="total"
@@ -235,7 +235,7 @@ export default {
       // 当前的页数
       pageNum: 1,
       // 当前每页显示数据条数
-      pageSize: 10,
+      pageSize: 15,
       //加载动画
       listLoading: false,
       //系统类型
@@ -343,7 +343,7 @@ export default {
     // 设定表格高度
     setTableHeight() {
       let h = document.documentElement.clientHeight || document.body.clientHeight;
-      this.curHeight = h - 300;
+      this.curHeight = h - 320;
     },
     //全选框事件
     checkSelect(data) {
@@ -418,9 +418,12 @@ export default {
         pageRow: this.pageSize,
         sysType: this.sysType,
         articleType: this.articleType,
-        title: this.listQuery.title,
         status
       };
+      console.log('title', this.listQuery.title === '');
+      if (this.listQuery.title !== '') {
+        params.title = this.listQuery.title;
+      }
       userService.getArticleList(params).then(res => {
         if (res.status !== 200) return this.$message.error('获取文章列表失败');
         this.listLoading = false;

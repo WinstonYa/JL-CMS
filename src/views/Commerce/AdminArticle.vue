@@ -127,7 +127,7 @@
         @size-change="handleSizeChange"
         @current-change="handleCurrentChange"
         :current-page="pageNum"
-        :page-sizes="[15, 20, 15, 20]"
+        :page-sizes="[15, 20, 25, 30]"
         :page-size="pageSize"
         layout="total, sizes, prev, pager, next, jumper"
         :total="total"
@@ -344,7 +344,7 @@ export default {
     // 设定表格高度
     setTableHeight() {
       let h = document.documentElement.clientHeight || document.body.clientHeight;
-      this.curHeight = h - 300;
+      this.curHeight = h - 320;
     },
     //全选框事件
     checkSelect(data) {
@@ -431,10 +431,12 @@ export default {
         pageRow: this.pageSize,
         sysType: this.sysType,
         articleType: this.articleType,
-        title: this.listQuery.title,
         status,
         isDelete
       };
+      if (this.listQuery.title !== '') {
+        params.title = this.listQuery.title;
+      }
       userService.getArticleList(params).then(res => {
         if (res.status !== 200) return this.$message.error('获取文章列表失败');
         this.listLoading = false;
@@ -546,6 +548,7 @@ export default {
             this.row.content = res.data.content;
             this.row.id = row.id;
             console.log(this.row, item);
+            this.row.simple = this.$refs.myTextEditor.quill.getText().substring(0, 100);
             userService.articleUpdate(this.row).then(res => {
               if (res.status !== 200) return this.$message.error('更新失败');
               this.getArticleList();

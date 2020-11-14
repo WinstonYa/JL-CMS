@@ -587,10 +587,10 @@ export default {
       });
     },
     DialogClose() {
-      this.row = {};
       this.fileProductList = [];
       this.imgRemoveLists = [];
       this.deleteIds = [];
+      this.$refs.addFormRef.resetFields();
       this.$refs.addFormRef.clearValidate();
       this.getList();
     },
