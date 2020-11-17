@@ -245,7 +245,8 @@ import userService from '../../globals/service/user';
 const videoTypeOptions = [
   { key: '农业科技', display_name: '农业科技' },
   { key: '讲座培训', display_name: '讲座培训' },
-  { key: '文化生活', display_name: '文化生活' }
+  { key: '文化生活', display_name: '文化生活' },
+  { key: '专家视频', display_name: '专家视频' }
 ];
 
 export default {

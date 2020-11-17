@@ -202,7 +202,7 @@
                   <el-input
                     v-model="row.price"
                     clearable
-                    onkeyup="this.value=this.value.replace(/[^\d]/g,'')"
+                    onkeyup="this.value=this.value.replace(/[^\d\.]/ig,'')"
                     placeholder="请输入价格"
                   ></el-input>
                 </el-form-item>
@@ -565,7 +565,7 @@ export default {
     },
     // 关闭对话框
     closeDialog() {
-      this.row = {};
+      // this.row = {};
       this.fileProductList = [];
       this.imgRemoveLists = [];
       this.deleteIds = [];

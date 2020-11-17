@@ -50,7 +50,7 @@ let dzswArticleType = [
   },
   {
     value: '4',
-    label: '管理资讯'
+    label: '农业资讯'
   },
   {
     value: '5',

@@ -293,7 +293,7 @@
                       </div>
                       <el-image
                         class="el-image-preview"
-                        :src="'http://' +item.path"
+                        :src="'http://' + item.path"
                         :preview-src-list="PFAPAuthSrcList"
                       ></el-image>
                     </div>
@@ -590,7 +590,7 @@ export default {
       },
       PFAPAuthRow: {
         authId: '',
-        authName: '无公害农产品', // 三品一标名称
+        authName: '', // 三品一标名称
         number: '', // 认证编号
         authDate: '', //认证日期
         pastDate: '', //过期日期
@@ -599,7 +599,7 @@ export default {
       },
       GVFAuthRow: {
         authId: '',
-        authName: '绿色食品', // 三品一标名称
+        authName: '', // 三品一标名称
         number: '', // 认证编号
         authDate: '', //认证日期
         pastDate: '', //过期日期
@@ -608,7 +608,7 @@ export default {
       },
       OFAuthRow: {
         authId: '',
-        authName: '有机农产品', // 三品一标名称
+        authName: '', // 三品一标名称
         number: '', // 认证编号
         authDate: '', //认证日期
         pastDate: '', //过期日期
@@ -617,7 +617,7 @@ export default {
       },
       GIFAuthRow: {
         authId: '',
-        authName: '农产品地理标志', // 三品一标名称
+        authName: '', // 三品一标名称
         number: '', // 认证编号
         authDate: '', //认证日期
         pastDate: '', //过期日期
@@ -923,6 +923,7 @@ export default {
       this.isGVF = false;
       this.isOF = false;
       this.isGIF = false;
+      console.log(row);
       if (row.authInfos.length > 0) {
         row.authInfos.forEach(item => {
           if (item.authName === '无公害农产品') {
@@ -994,11 +995,15 @@ export default {
     },
     // 关闭对话框
     closeDialog() {
-      this.row = {};
-      this.PFAPAuthRow = {};
-      this.GVFAuthRow = {};
-      this.OFAuthRow = {};
-      this.GIFAuthRow = {};
+      // this.row = {};
+      this.PFAPAuthRow.authId = '';
+      this.GVFAuthRow.authId = '';
+      this.OFAuthRow.authId = '';
+      this.GIFAuthRow.authId = '';
+      this.isPFAP = false;
+      this.isGVF = false;
+      this.isOF = false;
+      this.isGIF = false;
       this.fileProductList = [];
       this.imgRemoveLists = [];
       this.deleteIds = [];
@@ -1010,13 +1015,20 @@ export default {
     addPFAPAuthInfo(productId) {
       let PFAPForm = new FormData();
       PFAPForm.append('productId', productId);
-      PFAPForm.append('authName', this.PFAPAuthRow.authName); // 认证名称
+      PFAPForm.append('authName', '无公害农产品'); // 认证名称
       PFAPForm.append('number', this.PFAPAuthRow.number); // 认证编号
       PFAPForm.append('institution', this.PFAPAuthRow.institution); // 认证机构
-      this.PFAPAuthRow.authDate = this.$moment(new Date(this.PFAPAuthRow.authDate)).format('YYYY-MM-DD');
-      this.PFAPAuthRow.pastDate = this.$moment(new Date(this.PFAPAuthRow.pastDate)).format('YYYY-MM-DD');
-      PFAPForm.append('authDate', this.PFAPAuthRow.authDate); // 认证日期
-      PFAPForm.append('pastDate', this.PFAPAuthRow.pastDate); // 过期日期
+      console.log(this.PFAPAuthRow.authDate === '');
+      console.log(this.PFAPAuthRow.pastDate === '');
+      if (this.PFAPAuthRow.authDate !== undefined || this.PFAPAuthRow.authDate !== '') {
+        this.PFAPAuthRow.authDate = this.$moment(new Date(this.PFAPAuthRow.authDate)).format('YYYY-MM-DD');
+        this.PFAPAuthRow.pastDate = this.$moment(new Date(this.PFAPAuthRow.pastDate)).format('YYYY-MM-DD');
+        PFAPForm.append('authDate', this.PFAPAuthRow.authDate); // 认证日期
+        PFAPForm.append('pastDate', this.PFAPAuthRow.pastDate); // 过期日期
+      } else {
+        PFAPForm.append('authDate', ''); // 认证日期
+        PFAPForm.append('pastDate', ''); // 过期日期
+      }
       this.PFAPFileAuthImgList.forEach(item => {
         PFAPForm.append('files', item.raw);
       });
@@ -1033,13 +1045,21 @@ export default {
       PFAPForm.append('authName', this.PFAPAuthRow.authName); // 认证名称
       PFAPForm.append('number', this.PFAPAuthRow.number); // 认证编号
       PFAPForm.append('institution', this.PFAPAuthRow.institution); // 认证机构
-      this.PFAPAuthRow.authDate = this.$moment(new Date(this.PFAPAuthRow.authDate)).format('YYYY-MM-DD');
-      this.PFAPAuthRow.pastDate = this.$moment(new Date(this.PFAPAuthRow.pastDate)).format('YYYY-MM-DD');
-      PFAPForm.append('authDate', this.PFAPAuthRow.authDate); // 认证日期
-      PFAPForm.append('pastDate', this.PFAPAuthRow.pastDate); // 过期日期
+      if (this.PFAPAuthRow.authDate !== undefined || this.PFAPAuthRow.authDate !== '') {
+        this.PFAPAuthRow.authDate = this.$moment(new Date(this.PFAPAuthRow.authDate)).format('YYYY-MM-DD');
+        this.PFAPAuthRow.pastDate = this.$moment(new Date(this.PFAPAuthRow.pastDate)).format('YYYY-MM-DD');
+        PFAPForm.append('authDate', this.PFAPAuthRow.authDate); // 认证日期
+        PFAPForm.append('pastDate', this.PFAPAuthRow.pastDate); // 过期日期
+      } else {
+        PFAPForm.append('authDate', ''); // 认证日期
+        PFAPForm.append('pastDate', ''); // 过期日期
+      }
+
       this.PFAPFileAuthImgList.forEach(item => {
         PFAPForm.append('files', item.raw);
       });
+      console.log(this.PFAPAuthRow.authDate);
+      console.log(this.PFAPAuthRow.pastDate);
       // delIds
       this.PFAPdeleteIds.map(item => {
         PFAPForm.append('delIds', item);
@@ -1060,7 +1080,7 @@ export default {
     addGVFPAuthInfo(productId) {
       let GVFPForm = new FormData();
       GVFPForm.append('productId', productId);
-      GVFPForm.append('authName', this.GVFAuthRow.authName); // 认证名称
+      GVFPForm.append('authName', '绿色食品'); // 认证名称
       GVFPForm.append('number', this.GVFAuthRow.number); // 认证编号
       GVFPForm.append('institution', this.GVFAuthRow.institution); // 认证机构
       this.GVFAuthRow.authDate = this.$moment(new Date(this.GVFAuthRow.authDate)).format('YYYY-MM-DD');
@@ -1106,7 +1126,7 @@ export default {
     addOFAuthInfo(productId) {
       let OFPForm = new FormData();
       OFPForm.append('productId', productId);
-      OFPForm.append('authName', this.OFAuthRow.authName); // 认证名称
+      OFPForm.append('authName', '有机农产品'); // 认证名称
       OFPForm.append('number', this.OFAuthRow.number); // 认证编号
       OFPForm.append('institution', this.OFAuthRow.institution); // 认证机构
       this.OFAuthRow.authDate = this.$moment(new Date(this.OFAuthRow.authDate)).format('YYYY-MM-DD');
@@ -1152,7 +1172,7 @@ export default {
     addGIFAuthInfo(productId) {
       let GIFForm = new FormData();
       GIFForm.append('productId', productId);
-      GIFForm.append('authName', this.GIFAuthRow.authName); // 认证名称
+      GIFForm.append('authName', '农产品地理标志'); // 认证名称
       GIFForm.append('number', this.GIFAuthRow.number); // 认证编号
       GIFForm.append('institution', this.GIFAuthRow.institution); // 认证机构
       this.GIFAuthRow.authDate = this.$moment(new Date(this.GIFAuthRow.authDate)).format('YYYY-MM-DD');
@@ -1291,6 +1311,10 @@ export default {
               } else if (this.GIFAuthRow.authId !== undefined && this.GIFAuthRow.authId !== '') {
                 this.delGIFAuthInfo(); // 删除 农产品地理标志 认证信息
               }
+              this.isPFAP = false;
+              this.isGVF = false;
+              this.isOF = false;
+              this.isGIF = false;
               this.dialogShow = false;
               this.getAllList();
             })
